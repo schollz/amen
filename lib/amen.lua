@@ -52,6 +52,7 @@ function Amen:new(args)
   }
 
   -- setup lattice
+  l.bpm_current=0
   l.lattice=lattice:new({
     ppqn=64
   })
@@ -65,11 +66,23 @@ function Amen:new(args)
       end,
     division=1/(division/2)}
   end
+  l.lattice:start()
 
   return l
 end
 
 function Amen:emit_note(division,t)
+  -- register changes in the bpm
+  if self.bpm_current~=clock.get_tempo() then
+    self.bpm_current=clock.get_tempo()
+    for i=1,2 do
+      if self.voice[i].sample~="" then
+        engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
+        engine.amenbpm(i+2,self.voice[i].bpm,self.bpm_current)
+      end
+    end
+  end
+  -- dequeue effects
   for i=1,2 do
     if self.voice[i].sample~="" then
       if #self.voice[i].queue>0 then
@@ -82,6 +95,8 @@ function Amen:emit_note(division,t)
       end
     end
   end
+  -- enqueue effects randomly
+  -- TODO
 end
 
 function Amen:process_queue(i,q)
@@ -128,6 +143,7 @@ function Amen:load(i,fname)
     self.voice[i].bpm=clock.get_tempo()
   end
   self.voice[i].sample=fname
+  engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
 end
 
 

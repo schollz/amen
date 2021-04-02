@@ -42,7 +42,7 @@ Engine_Amen : CroneEngine {
 			SynthDef("playerAmen"++i,{ 
 				arg bufnum, amp=0, t_trig=0,
 				sampleStart=0,sampleEnd=1,samplePos=0,
-				rate=1,rateSlew=0,bpm_current=1,bpm_target=1,
+				rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
 				spin=0,
 				pan=0,lpf=20000,hpf=10;
 	
@@ -50,7 +50,7 @@ Engine_Amen : CroneEngine {
 				var snd;
 				rate = Lag.kr(rate,rateSlew);
 				rate = ((spin>0)*LFTri.kr(spin)+(spin<1)*rate);
-				rate = rate * bpm_target / bpm_current;
+				rate = rate * bpm_target / bpm_sample;
 				snd=BufRd.ar(2,bufnum,
 					Phasor.ar(
 						trig:t_trig,
@@ -99,7 +99,7 @@ Engine_Amen : CroneEngine {
 		this.addCommand("amenbpm","iff", { arg msg;
 			// lua is sending 1-index
 			samplerPlayerAmen[msg[1]-1].set(
-				\bpm_current,msg[2],
+				\bpm_sample,msg[2],
 				\bpm_target,msg[3],
 			);
 		});
