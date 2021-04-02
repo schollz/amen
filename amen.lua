@@ -26,8 +26,9 @@ function init()
     softcut.buffer(i,i)
     softcut.pan(i,util.linlin(1,2,-1,1,i))
     softcut.loop(i,1)
+    softcut.fade_time(i,0)
     softcut.loop_start(i,0)
-    softcut.loop_end(i,60) -- TODO: calculate based on bpm
+    softcut.loop_end(i,clock.get_beat_sec()*beat_num) -- TODO: calculate based on bpm
     softcut.rec(i,0)
     softcut.enable(i,1)
 
