@@ -36,6 +36,7 @@ function init()
     softcut.level_eng_cut(1)
     softcut.level_adc_cut(0)
     softcut.level_tape_cut(0)
+    softcut.phase_quant(i,0.025)
 
     softcut.post_filter_dry(i,0.0)
     softcut.post_filter_lp(i,1.0)
@@ -79,6 +80,13 @@ function recording_start()
   polling[1].time=1
   polling[2].time=1
   recording=true
+  for i=1,2 do
+    softcut.position(i,0)
+    softcut.rec_level(i,1)
+    softcut.rec(i,1)
+    softcut.play(i,1)
+    softcut.loop(i,0)
+  end
   engine.recorder_amp(1)
   audio.level_monitor(0)
 end
@@ -101,6 +109,23 @@ function recording_stop()
   end
   recording=false
   audio.level_eng_cut(0)
+  for i=1,2 do
+    softcut.position(i,0)
+    softcut.rec_level(i,0)
+    softcut.rec(i,0)
+    softcut.play(i,0)
+  end
+end
+
+function play()
+  if recording or primed then
+    do return end
+  end
+  for i=1,2 do
+    softcut.position(i,0)
+    softcut.play(i,1)
+    softcut.loop(i,1)
+  end
 end
 
 function on_render(ch,start,i,s)
