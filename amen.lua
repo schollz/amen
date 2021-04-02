@@ -10,6 +10,7 @@ engine.name="Amen"
 beat_num=16
 primed=false
 recording=false
+current_pos={0,0}
 -- WAVEFORMS
 waveform_samples={{}}
 
@@ -54,6 +55,10 @@ function init()
   softcut.render_buffer(1,0,clock.get_beat_sec()*beat_num,128)
   softcut.render_buffer(2,0,clock.get_beat_sec()*beat_num,128)
   softcut.event_render(on_render)
+  softcut.event_phase(function(i,x)
+    current_pos[i]=x
+  end)
+  softcut.poll_start_phase()
 
   -- initate recording on incoming audio
   polls={"amp_in_l","amp_in_r"}
@@ -142,6 +147,7 @@ end
 function redraw_clock() -- our grid redraw clock
   while true do -- while it's running...
     clock.sleep(1/30) -- refresh
+    -- TODO check if position is too high and then auto turn off recording
     redraw()
   end
 end
