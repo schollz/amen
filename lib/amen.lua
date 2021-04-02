@@ -4,7 +4,7 @@ local Amen={}
 function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
   local args=args==nil and {} or args
-  l.debug = args.debug
+  l.debug=args.debug
 
 
   -- add parameters
@@ -38,7 +38,7 @@ function Amen:new(args)
 end
 
 function Amen:load(fname,slot)
-  if slot==nil then 
+  if slot==nil then
     slot=1
   end
 end
