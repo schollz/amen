@@ -7,8 +7,11 @@ amenbreaks=include("amen/lib/amen")
 
 engine.name="Amen"
 
+beat_num=16
 primed=false
 recording=false
+-- WAVEFORMS
+waveform_samples={{}}
 
 function init()
   amen=amenbreaks:new()
@@ -47,6 +50,9 @@ function init()
   for i=3,6 do
     softcut.enable(i,0)
   end
+  softcut.render_buffer(1,0,clock.get_beat_sec()*beat_num,128)
+  softcut.render_buffer(2,0,clock.get_beat_sec()*beat_num,128)
+  softcut.event_render(on_render)
 
   -- initate recording on incoming audio
   polls={"amp_in_l","amp_in_r"}
@@ -97,6 +103,10 @@ function recording_stop()
   audio.level_eng_cut(0)
 end
 
+function on_render(ch,start,i,s)
+  waveform_samples[ch]=s
+end
+
 function enc(k,d)
 
 end
@@ -113,7 +123,19 @@ end
 
 function redraw()
   screen.clear()
-
+  screen.level(15)
+  waveform_height=20
+  waveform_center=30
+  if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
+    for j=1,2 do
+      for i,s in ipairs(waveform_samples[j]) do
+        local height=util.clamp(0,waveform_height,util.round(math.abs(s)*waveform_height))
+        screen.move(i,58-waveform_height/2)
+        screen.line_rel(0,(j*2-3)*height)
+        screen.stroke()
+      end
+    end
+  end
   screen.update()
 end
 
