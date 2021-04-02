@@ -125,13 +125,13 @@ function redraw()
   screen.clear()
   screen.level(15)
   waveform_height=20
-  waveform_center=30
+  waveform_center=58
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
     for j=1,2 do
       for i,s in ipairs(waveform_samples[j]) do
         local height=util.clamp(0,waveform_height,util.round(math.abs(s)*waveform_height))
-        screen.move(i,58-waveform_height/2)
-        screen.line_rel(0,(j*2-3)*height)
+        screen.move(i,waveform_center)
+        screen.line_rel(0,(j*2-3)*height/2)
         screen.stroke()
       end
     end
