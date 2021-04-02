@@ -41,7 +41,7 @@ Engine_Amen : CroneEngine {
 		(0..5).do({arg i; 
 			SynthDef("playerAmen"++i,{ 
 				arg bufnum, amp=0, t_trig=0,
-				sampleStart=0,sampleEnd=1,
+				sampleStart=0,sampleEnd=1,samplePos=0,
 				rate=1,rateSlew=0,bpm_current=1,bpm_target=1,
 				spin=0,
 				pan=0,lpf=20000,hpf=10;
@@ -57,7 +57,7 @@ Engine_Amen : CroneEngine {
 						rate:BufRateScale.kr(bufnum)*rate,
 						start:((sampleStart*(rate>0))+(sampleEnd*(rate<0)))*BufFrames.kr(bufnum),
 						end:((sampleEnd*(rate>0))+(sampleStart*(rate<0)))*BufFrames.kr(bufnum),
-						resetPos:((sampleStart*(rate>0))+(sampleEnd*(rate<0)))*BufFrames.kr(bufnum)
+						resetPos:samplePos*BufFrames.kr(bufnum)
 					)
 					loop:1,
 					interpolation:1
@@ -70,22 +70,37 @@ Engine_Amen : CroneEngine {
 		});
 
 		samplerPlayerAmen = Array.fill(2,{arg i;
-			Synth("player"++i, target:context.xg);
+			Synth("playerAmen"++i, target:context.xg);
 		});
 
 		this.addCommand("amenrelease","", { arg msg;
-			(0..199).do({arg i; sampleBuffAmen[i].free});
+			(0..2).do({arg i; sampleBuffAmen[i].free});
 		});
-		this.addCommand("amenload","is", { arg msg;
+
+		this.addCommand("amenload","isi", { arg msg;
 			// lua is sending 1-index
 			sampleBuffAmen[msg[1]-1].free;
 			sampleBuffAmen[msg[1]-1] = Buffer.read(context.server,msg[2]);
+			samplePlayer[msg[3]-1].set(
+				\bufnum,sampleBuffAmen[msg[1]-1]
+			);
+			samplePlayer[msg[3]+1].set(
+				\bufnum,sampleBuffAmen[msg[1]-1]
+			);
 		});
 
 		this.addCommand("amenamp","if", { arg msg;
 			// lua is sending 1-index
 			samplerPlayerAmen[msg[1]-1].set(
 				\amp,msg[2],
+			);
+		});
+
+		this.addCommand("amenbpm","iff", { arg msg;
+			// lua is sending 1-index
+			samplerPlayerAmen[msg[1]-1].set(
+				\bpm_current,msg[2],
+				\bpm_target,msg[3],
 			);
 		});
 
@@ -101,8 +116,17 @@ Engine_Amen : CroneEngine {
 			// lua is sending 1-index
 			samplerPlayerAmen[msg[1]-1].set(
 				\t_trig,1,
+				\samplePos,msg[2]
 				\sampleStart,msg[2],
-				\sampleEnd,msg[2],
+				\sampleEnd,msg[3],
+			);
+		});
+
+		this.addCommand("amenjump","if", { arg msg;
+			// lua is sending 1-index
+			samplerPlayerAmen[msg[1]-1].set(
+				\t_trig,1,
+				\samplePos,msg[2],
 			);
 		});
 

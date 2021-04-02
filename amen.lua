@@ -3,7 +3,7 @@
 --
 
 local UI=require "ui"
-amenbreaks=include("amen/lib/amen")
+-- amenbreaks=include("amen/lib/amen")
 
 engine.name="Amen"
 
@@ -16,7 +16,7 @@ current_pos={0,0}
 waveform_samples={{}}
 
 function init()
-  amen=amenbreaks:new()
+  -- amen=amenbreaks:new()
 
   -- initiate softcut
   softcut.reset()
@@ -156,6 +156,13 @@ function on_render(ch,start,i,s)
 end
 
 function enc(k,d)
+  if k==1 then
+    beat_num=beat_num+sign(d)
+    for i=1,2 do
+      softcut.loop_end(i,clock.get_beat_sec()*beat_num) -- TODO: calculate based on bpm
+      softcut.render_buffer(i,0,clock.get_beat_sec()*beat_num,128)
+    end
+  end
 
 end
 
@@ -188,6 +195,9 @@ end
 function redraw()
   screen.clear()
   screen.level(15)
+  screen.move(8,8)
+  screen.text("loop recorder, beats="..beat_num)
+  screen.level(15)
   waveform_height=20
   waveform_center=58
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
@@ -201,6 +211,16 @@ function redraw()
     end
   end
   screen.update()
+end
+
+function sign(x)
+  if x>0 then
+    return 1
+  elseif x<0 then
+    return-1
+  else
+    return 0
+  end
 end
 
 function cleanup()
