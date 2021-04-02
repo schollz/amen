@@ -8,11 +8,30 @@ Engine_Amen : CroneEngine {
 	var samplerPlayerAmen;
 	// Amen ^
 
+	// recorder specific
+	var sampleBuffRecorder;
+	var synthRecorder;
+	// recorder ^
+
 	*new { arg context, doneCallback;
 		^super.new(context, doneCallback);
 	}
 
 	alloc {
+	
+		// recorder specific
+		sampleBuffRecorder = Array.fill(2, { arg i;
+			Buffer.alloc(context.server,48000*0.03,1);
+		});
+
+	    synthRecorder = { arg delay=0.03, volume=0.0;
+	      var input = SoundIn.ar([0, 1]);
+	      BufDelayC.ar([bufnum1,bufnum2], input, delayTime:0.03, mul:volume)
+	    }.play(context.server);
+
+	    this.addCommand("recorder_amp", "f", { arg msg; synthRecorder.set(\volume, msg[1]);});
+		// recorder ^
+
 		// Amen specific
 		sampleBuffAmen = Array.fill(2, { arg i; 
 			Buffer.new(context.server);
@@ -131,5 +150,10 @@ Engine_Amen : CroneEngine {
 		(0..2).do({arg i; sampleBuffAmen[i].free});
 		(0..5).do({arg i; samplerPlayerAmen[i].free});
 		// ^ Amen specific
+
+		// recorder specific
+		(0..2).do({arg i; sampleBuffRecorder[i].free});
+		synthRecorder.free;
+		// recorder ^
 	}
 }
