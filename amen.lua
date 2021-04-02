@@ -10,6 +10,7 @@ engine.name="Amen"
 beat_num=16
 primed=false
 recording=false
+playing=false
 current_pos={0,0}
 -- WAVEFORMS
 waveform_samples={{}}
@@ -82,9 +83,7 @@ function recording_start()
   if not primed or recording then
     do return end
   end
-  primed=false
-  polling[1].time=1
-  polling[2].time=1
+  recording_unarm()
   recording=true
   for i=1,2 do
     softcut.position(i,0)
@@ -95,6 +94,12 @@ function recording_start()
   end
   engine.recorder_amp(1)
   audio.level_monitor(0)
+end
+
+function recording_unarm()
+  primed=false
+  polling[1].time=1
+  polling[2].time=1
 end
 
 function recording_arm()
@@ -127,10 +132,22 @@ function play()
   if recording or primed then
     do return end
   end
+  print("play")
   for i=1,2 do
     softcut.position(i,0)
     softcut.play(i,1)
     softcut.loop(i,1)
+  end
+end
+
+function stop()
+  if not playing then
+    do return end
+  end
+  print("stop")
+  for i=1,2 do
+    softcut.position(i,0)
+    softcut.play(i,0)
   end
 end
 
@@ -143,6 +160,21 @@ function enc(k,d)
 end
 
 function key(k,z)
+  if k==2 and z==1 then
+    if not primed and not recording then
+      recording_arm()
+    elseif primed and not recording then
+      recording_unarm()
+    elseif recording then
+      recording_stop()
+    end
+  elseif k==3 and z==1 then
+    if not playing then
+      play()
+    else
+      stop()
+    end
+  end
 end
 
 function redraw_clock() -- our grid redraw clock
