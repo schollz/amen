@@ -26,7 +26,7 @@ Engine_Amen : CroneEngine {
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
                 scratch=0,
-                pan=0,lpf=20000,hpf=10;
+                pan=0,lpf=20000,lpflag=0,hpf=10;
     
                 // vars
                 var snd,pos;
@@ -44,7 +44,7 @@ Engine_Amen : CroneEngine {
                     loop:1,
                     interpolation:1
                 );
-                snd = LPF.ar(snd,lpf);
+                snd = LPF.ar(snd,Lag.kr(lpf,lpflag));
                 snd = HPF.ar(snd,hpf);
                 snd = Balance2.ar(snd[0],snd[1],pan,level:amp);
                 if (i==0, {                    
@@ -152,10 +152,11 @@ Engine_Amen : CroneEngine {
             );
         });
 
-        this.addCommand("amenlpf","if", { arg msg;
+        this.addCommand("amenlpf","iff", { arg msg;
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
                 \lpf,msg[2],
+                \lpflag,msg[3],
             );
         });
 

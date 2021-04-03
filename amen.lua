@@ -23,8 +23,10 @@ key2on=false
 key3on=false
 breaker_select=1
 breaker_options={
+    {"start","stop"},
     {"scratch","loop"},
     {"reverse","jump"},
+    {"slow","lpf"},
 }
 -- WAVEFORMS
 waveform_samples={{}}
@@ -86,6 +88,8 @@ function init()
   softcut.poll_start_phase()
   loop_points={clock.get_beat_sec()*1,clock.get_beat_sec()*(beat_num+4)}
   window={0,clock.get_beat_sec()*beat_num*2}
+  zoom_inout(1)
+  zoom_jog(0)
 
   -- start runner
   runner=metro.init()
@@ -98,7 +102,7 @@ function init()
   osc.event=osc_in
 
   -- debug
-  -- params:set("1amen_file",_path.audio.."amen/loop2_bpm120.wav")
+  params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
 end
 
 function recording_start()
@@ -159,6 +163,44 @@ function playback_stop()
   end
 end
 
+function zoom_inout(zoom)
+    local di=zoom*math.abs(loop_points[1]-window[1])
+    local di2=zoom*math.abs(loop_points[1]-window[2])
+    if di2>di then
+      di=di2
+    end
+    window[1]=loop_points[1]-di
+    window[1]=util.clamp(window[1],0,120)
+    window[2]=loop_points[1]+di
+    for i=1,2 do
+      softcut.render_buffer(i,window[1],window[2]-window[1],128)
+    end
+end
+
+function zoom_jog(jog)
+  loop_points[1]=util.clamp(loop_points[1]+jog/100*(window[2]-window[1]),0,120)
+  loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
+  if not recording then
+    for i=1,2 do
+      softcut.loop_start(i,loop_points[1])
+      softcut.loop_end(i,loop_points[2])
+    end
+  end
+  if loop_points[2] > window[2] then
+    window[1]=window[1]+(loop_points[2]-window[2]) 
+    window[2]=loop_points[2]
+    for i=1,2 do
+      softcut.render_buffer(i,window[1],window[2]-window[1],128)
+    end
+  end
+  if loop_points[1] < window[1] then
+    window[2]=window[2]+(loop_points[1]-window[1]) 
+    window[1]=loop_points[1]
+    for i=1,2 do
+      softcut.render_buffer(i,window[1],window[2]-window[1],128)
+    end
+  end
+end
 
 function enc(k,d)
   if not breaker then
@@ -167,40 +209,9 @@ function enc(k,d)
       if d<0 then
         zoom=1.5
       end
-      local di=zoom*math.abs(loop_points[1]-window[1])
-      local di2=zoom*math.abs(loop_points[1]-window[2])
-      if di2>di then
-        di=di2
-      end
-      window[1]=loop_points[1]-di
-      window[1]=util.clamp(window[1],0,120)
-      window[2]=loop_points[1]+di
-      for i=1,2 do
-        softcut.render_buffer(i,window[1],window[2]-window[1],128)
-      end
+      zoom_inout(zoom)
     elseif k==3 then
-      loop_points[1]=util.clamp(loop_points[1]+d/100*(window[2]-window[1]),0,120)
-      loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
-      if not recording then
-        for i=1,2 do
-          softcut.loop_start(i,loop_points[1])
-          softcut.loop_end(i,loop_points[2])
-        end
-      end
-      if loop_points[2] > window[2] then
-        window[1]=window[1]+(loop_points[2]-window[2]) 
-        window[2]=loop_points[2]
-        for i=1,2 do
-          softcut.render_buffer(i,window[1],window[2]-window[1],128)
-        end
-      end
-      if loop_points[1] < window[1] then
-        window[2]=window[2]+(loop_points[1]-window[1]) 
-        window[1]=loop_points[1]
-        for i=1,2 do
-          softcut.render_buffer(i,window[1],window[2]-window[1],128)
-        end
-      end
+      zoom_jog(d)
     else
       beat_num=util.clamp(beat_num+sign(d),1,64)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
@@ -249,12 +260,24 @@ function key(k,z)
         params:set("1amen_reverse",z)
       elseif sel=="scratch" then
         params:set("1amen_scratch",z)
-      elseif sel=="tape stop" then
+      elseif sel=="slow" then
         params:set("1amen_tapestop",z)
       elseif sel=="jump" then
         amen:effect_jump(1,math.random(1,8)/8)
       elseif sel=="loop" then
-        amen:effect_loop(1,math.random(1,8)/16,math.random(8,16)/16,math.random(3,12))
+        if z==1 then
+          local start = math.random(1,15)
+          amen:effect_loop(1,start/16,math.random(start+1,16)/16)
+        else
+          amen:effect_loop(1,math.random(1,8)/16,math.random(8,16)/16,0.1)
+        end
+      elseif sel=="start" and z==1 then
+          amen:effect_rate(1,1)
+          amen.lattice:hard_restart()
+      elseif sel=="stop" and z==1 then
+          amen:effect_rate(1,0)
+      elseif sel=="lpf" then
+          amen:effect_filterdown(1,300,z==1)
       end
     end
   else

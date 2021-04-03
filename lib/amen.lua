@@ -8,6 +8,7 @@ local TYPE_JUMP=3
 local TYPE_TAPESTOP=4
 local TYPE_SPLIT=5
 local TYPE_LOOP=6
+local TYPE_FILTERDOWN=7
 
 function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
@@ -105,7 +106,7 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(20,20000,'exp',0,20000,'Hz'),
       formatter=Formatters.format_freq,
       action=function(v)
-        engine.amenlpf(i,v)
+        engine.amenlpf(i,v,0)
       end}
     params:add {
       type='control',
@@ -276,11 +277,11 @@ function Amen:process_queue(i,q)
       end)
     end
   elseif q[1]==TYPE_TAPESTOP then
-    engine.amenrate(i,q[2],clock.get_beat_sec()*4)
+    engine.amenrate(i,q[2],2)
     if q[3]~=nil then
       clock.run(function()
         clock.sync(q[3])
-        engine.amenrate(i,self.voice[i].rate,clock.get_beat_sec()*4)
+        engine.amenrate(i,self.voice[i].rate,4)
       end)
     end
   elseif q[1]==TYPE_SPLIT and i==1 or i==2 then
@@ -308,6 +309,12 @@ function Amen:process_queue(i,q)
         print("reseting loop")
         engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
       end)
+    end  
+  elseif q[1]==TYPE_FILTERDOWN then
+    if q[3] then
+      engine.amenlpf(i,q[2],2)
+    else
+      engine.amenlpf(i,params:get(i.."amen_lpf"),2)
     end    
   end
 end
@@ -338,6 +345,10 @@ end
 
 function Amen:effect_split(i,on)
   table.insert(self.voice[i].queue,{TYPE_SPLIT,on})
+end
+
+function Amen:effect_filterdown(i,fc,on)
+  table.insert(self.voice[i].queue,{TYPE_FILTERDOWN,fc,on})
 end
 
 
