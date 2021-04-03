@@ -15,7 +15,7 @@ function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
   local args=args==nil and {} or args
   l.debug=args.debug
-
+  l.current_sc_pos=0
   -- set engine
 
   l.voice={}
@@ -25,6 +25,7 @@ function Amen:new(args)
       bpm=60,
       beats=0,
       queue={},
+      hard_reset=false,
       disable_reset=false,
       rate=1,
       split=false,
@@ -52,6 +53,12 @@ function Amen:new(args)
     division=1/(division/2)}
   end
   l.lattice:start()
+
+  -- osc input
+  osc.event=function(path,args,from)
+    -- print(args[2])
+    l.current_sc_pos=args[2]
+  end
 
 
   return l
@@ -100,7 +107,7 @@ end
 
 function Amen:setup_parameters()
   -- add parameters
-  params:add_group("AMEN",23*2)
+  params:add_group("AMEN",25*2)
   for i=1,2 do
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
@@ -193,7 +200,7 @@ function Amen:setup_parameters()
         end
         self.debounce_loopstart=clock.run(function()
           clock.sleep(0.5)
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
     }
@@ -210,7 +217,7 @@ function Amen:setup_parameters()
         end
         self.debounce_loopend=clock.run(function()
           clock.sleep(0.5)
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
     }
@@ -224,11 +231,11 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s=math.random(util.round(params:get(i.."amen_loopstart")*1000),math.floor(params:get(i.."amen_loopend")*1000-125))
-          local e=math.random(math.floor(s,params:get(i.."amen_loopend")*1000))
-          amen:effect_loop(i,s/1000,e/1000)
+          local s=math.random(util.round(params:get(i.."amen_loopstart")*1000),math.floor(params:get(i.."amen_loopend")*1000-500))
+          local e=math.random(math.floor(s)+100,params:get(i.."amen_loopend")*1000)
+          self:effect_loop(i,s/1000,e/1000)
         else
-          amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+          self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end
       end
     }
@@ -236,6 +243,30 @@ function Amen:setup_parameters()
       type='control',
       id=i..'amen_loop_prob',
       name='loop prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
+    params:add{
+      type='binary',
+      name="stutter",
+      id=i..'amen_stutter',
+      behavior='momentary',
+      action=function(v)
+        print(i.."amen_stutter "..v)
+        if v==1 then
+          local s=self.current_sc_pos
+          local e=s+math.random(15,100)/self.voice[i].duration/1000
+          print("stutter",s,e)
+          self:effect_loop(i,s,e)
+        else
+          self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"),0,self.current_sc_pos)
+          self.voice[i].hard_reset=true
+        end
+      end
+    }
+    params:add {
+      type='control',
+      id=i..'amen_stutter_prob',
+      name='stutter prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
     params:add{
@@ -355,7 +386,7 @@ function Amen:setup_parameters()
     params:add {
       type='control',
       name='strobe prob',
-      id=i..'aamen_strobe_prob',
+      id=i..'amen_strobe_prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
   end
@@ -367,7 +398,13 @@ function Amen:emit_note(division,t)
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       if t/32%(self.voice[i].beats*2)==0 then
         -- reset to get back in sync
-        engine.amenreset(i)
+        print("reseting")
+        if self.voice[i].hard_reset==true then
+          self.voice[i].hard_reset=false
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        else
+          engine.amenreset(i)
+        end
         if self.voice[i].split then
           engine.amenreset(i+2)
         end
@@ -439,11 +476,18 @@ function Amen:emit_note(division,t)
           params:set(i.."amen_reverse",0)
         end)
       end
-      if params:get(i.."aamen_strobe_prob")/100/8>math.random() then
+      if params:get(i.."amen_strobe_prob")/100/8>math.random() then
         params:set(i.."amen_strobe",1)
         clock.run(function()
           clock.sleep(math.random(0,30)/10)
           params:set(i.."amen_strobe",0)
+        end)
+      end
+      if params:get(i.."amen_stutter_prob")/100/8>math.random() then
+        params:set(i.."amen_stutter",1)
+        clock.run(function()
+          clock.sleep(math.random(100,500)/1000)
+          params:set(i.."amen_stutter",0)
         end)
       end
     end
@@ -498,12 +542,16 @@ function Amen:process_queue(i,q)
       engine.amenamp(i+2,0)
     end
   elseif q[1]==TYPE_LOOP then
-    engine.amenloop(i,q[2],q[3])
+    if q[5]~=nil then
+      engine.amenloop(i,q[5],q[2],q[3])
+    else
+      engine.amenloop(i,q[2],q[2],q[3])
+    end
     if q[4]~=nil and q[4]>0 then
       clock.run(function()
         clock.sync(q[4])
         print("reseting loop")
-        engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
       end)
     end
   elseif q[1]==TYPE_FILTERDOWN then
@@ -533,8 +581,8 @@ function Amen:effect_rate(i,val,duration)
   table.insert(self.voice[i].queue,{TYPE_RATE,val,duration})
 end
 
-function Amen:effect_loop(i,loopStart,loopEnd,duration)
-  table.insert(self.voice[i].queue,{TYPE_LOOP,loopStart,loopEnd,duration})
+function Amen:effect_loop(i,loopStart,loopEnd,duration,newstart)
+  table.insert(self.voice[i].queue,{TYPE_LOOP,loopStart,loopEnd,duration,newstart})
 end
 
 function Amen:effect_filterdown(i,fc,duration)
@@ -551,3 +599,6 @@ end
 
 
 return Amen
+
+
+

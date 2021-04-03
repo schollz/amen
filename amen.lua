@@ -14,7 +14,6 @@ recording=false
 recorded=false
 playing=false
 current_pos={0,0}
-current_sc_pos=0
 last_pos=0
 loop_points={0,0}
 window={0,0}
@@ -23,10 +22,11 @@ key2on=false
 key3on=false
 breaker_select=1
 breaker_options={
-  {"start","stop"},
+  {"stop","start"},
   {"scratch","loop"},
   {"reverse","jump"},
   {"slow","lpf"},
+  {"stutter","strobe"},
 }
 -- WAVEFORMS
 waveform_samples={{}}
@@ -97,9 +97,6 @@ function init()
   runner.count=-1
   runner.event=runner_f
   runner:start()
-
-  -- osc input
-  osc.event=osc_in
 
   -- debug
   params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
@@ -273,6 +270,10 @@ function key(k,z)
         params:set("1amen_play",0)
       elseif sel=="lpf" then
         params:set("1amen_lpf_effect",z)
+      elseif sel=="stutter" then
+        params:set("1amen_stutter",z)
+      elseif sel=="strobe" then
+        params:set("1amen_strobe",z)
       end
     end
   else
@@ -396,7 +397,7 @@ function redraw()
   end
   local pos=util.round(util.linlin(window[1],window[2],1,128,current_pos[1]))
   if breaker then
-    pos=util.round(util.linlin(0,1,1,128,current_sc_pos))
+    pos=util.round(util.linlin(0,1,1,128,amen.current_sc_pos))
   end
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
     for j=1,2 do
@@ -478,12 +479,6 @@ function print_message(message)
     show_message=nil
     redraw()
   end)
-end
-
-
-function osc_in(path,args,from)
-  -- print(args[2])
-  current_sc_pos=args[2]
 end
 
 

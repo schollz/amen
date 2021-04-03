@@ -117,10 +117,19 @@ Engine_Amen : CroneEngine {
             );
         });
 
-        this.addCommand("amenloop","iff", { arg msg;
+        this.addCommand("amenloop","ifff", { arg msg;
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
                 \t_trig,1,
+                \samplePos,msg[2],
+                \sampleStart,msg[3],
+                \sampleEnd,msg[4],
+            );
+        });
+
+        this.addCommand("amenloop_notrig","iff", { arg msg;
+            // lua is sending 1-index
+            playerAmen[msg[1]-1].set(
                 \samplePos,msg[2],
                 \sampleStart,msg[2],
                 \sampleEnd,msg[3],
