@@ -25,7 +25,7 @@ Engine_Amen : CroneEngine {
                 arg bufnum, amp=0, t_trig=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
-                scratch=0,
+                scratch=0,strobe=0,
                 pan=0,lpf=20000,lpflag=0,hpf=10;
     
                 // vars
@@ -46,7 +46,12 @@ Engine_Amen : CroneEngine {
                 );
                 snd = LPF.ar(snd,Lag.kr(lpf,lpflag));
                 snd = HPF.ar(snd,hpf);
-                snd = Balance2.ar(snd[0],snd[1],pan,level:amp);
+                snd = ((strobe<1)*snd)+((strobe>0)*snd*LFPulse.ar(60/bpm_target*16));
+                snd = Balance2.ar(snd[0],snd[1],
+                    pan+SinOsc.kr(60/bpm_target*16,mul:strobe*0.5),
+                    level:amp
+                );
+
                 if (i==0, {                    
                 SendTrig.kr(Impulse.kr(30),0,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));
                     },{});
@@ -81,11 +86,11 @@ Engine_Amen : CroneEngine {
             sampleBuffAmen[msg[1]-1] = Buffer.read(context.server,msg[2]);
             playerAmen[msg[1]-1].set(
                 \bufnum,sampleBuffAmen[msg[1]-1],
-                \amp,0,
+                \rate,0,
             );
             playerAmen[msg[1]+1].set(
                 \bufnum,sampleBuffAmen[msg[1]-1],
-                \amp,0,
+                \rate,0,
             );
         });
 
@@ -171,6 +176,13 @@ Engine_Amen : CroneEngine {
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
                 \pan,msg[2],
+            );
+        });
+
+        this.addCommand("amenstrobe","if", { arg msg;
+            // lua is sending 1-index
+            playerAmen[msg[1]-1].set(
+                \strobe,msg[2],
             );
         });
 

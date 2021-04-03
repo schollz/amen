@@ -9,6 +9,7 @@ local TYPE_TAPESTOP=4
 local TYPE_SPLIT=5
 local TYPE_LOOP=6
 local TYPE_FILTERDOWN=7
+local TYPE_STROBE=8
 
 function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
@@ -99,7 +100,7 @@ end
 
 function Amen:setup_parameters()
   -- add parameters
-  params:add_group("AMEN",17*2)
+  params:add_group("AMEN",23*2)
   for i=1,2 do
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
@@ -337,6 +338,26 @@ function Amen:setup_parameters()
       name='reverse prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
+    params:add{
+      type='binary',
+      name="strobe",
+      id=i..'amen_strobe',
+      behavior='momentary',
+      action=function(v)
+        print("amen_reverse "..v)
+        if v==1 then
+          self:effect_strobe(i,1)
+        else
+          self:effect_strobe(i,0)
+        end
+      end
+    }
+    params:add {
+      type='control',
+      name='strobe prob',
+      id=i..'aamen_strobe_prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
   end
 end
 
@@ -418,6 +439,13 @@ function Amen:emit_note(division,t)
           params:set(i.."amen_reverse",0)
         end)
       end
+      if params:get(i.."aamen_strobe_prob")/100/8>math.random() then
+        params:set(i.."amen_strobe",1)
+        clock.run(function()
+          clock.sleep(math.random(0,30)/10)
+          params:set(i.."amen_strobe",0)
+        end)
+      end
     end
   end
 end
@@ -480,6 +508,8 @@ function Amen:process_queue(i,q)
     end
   elseif q[1]==TYPE_FILTERDOWN then
     engine.amenlpf(i,q[2],2)
+  elseif q[1]==TYPE_STROBE then
+    engine.amenstrobe(i,q[2])
   end
 end
 
@@ -513,6 +543,10 @@ end
 
 function Amen:effect_split(i,on)
   table.insert(self.voice[i].queue,{TYPE_SPLIT,on})
+end
+
+function Amen:effect_strobe(i,v)
+  table.insert(self.voice[i].queue,{TYPE_STROBE,v})
 end
 
 
