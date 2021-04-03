@@ -31,6 +31,7 @@ function Amen:new(args)
     }
   end
 
+  l:setup_midi()
   l:setup_parameters()
 
   -- setup lattice
@@ -55,6 +56,47 @@ function Amen:new(args)
   return l
 end
 
+function Amen:setup_midi()
+
+  -- initiate midi connections
+  self.device={}
+  self.device_list={"disabled"}
+  for i,dev in pairs(midi.devices) do
+    if dev.port~=nil then
+      local name=string.lower(dev.name).." "..i
+      table.insert(self.device_list,name)
+      print("adding "..name.." to port "..dev.port)
+      self.device[name]={
+        name=name,
+        port=dev.port,
+        midi=midi.connect(dev.port),
+      }
+      self.device[name].midi.event=function(data)
+        -- if name~=self.device_list[params:get("midi_transport")] then
+        --   do return end
+        -- end
+        local msg=midi.to_msg(data)
+        if msg.type=="clock" then do return end end
+        -- OP-1 fix for transport
+        if msg.type=='start' or msg.type=='continue' then
+          print(name.." starting clock")
+          for i=1,2 do
+            if params:get(i.."amen_file")~="" then
+              params:set(i.."amen_play",1)
+            end
+          end
+        elseif msg.type=="stop" then
+          for i=1,2 do
+            if params:get(i.."amen_file")~="" then
+              params:set(i.."amen_play",0)
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
 function Amen:setup_parameters()
   -- add parameters
   params:add_group("AMEN",17*2)
@@ -63,18 +105,19 @@ function Amen:setup_parameters()
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
     params:set_action(i.."amen_file",function(fname)
       local ch,samples,samplerate=audio.file_info(fname)
-      self.voice[i].duration=samples/samplerate
       self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
       if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
         self.voice[i].bpm=clock.get_tempo()
       end
+      self.voice[i].duration=samples/samplerate
+      self.voice[i].samples=samples
       self.voice[i].beats=math.floor(util.round(self.voice[i].duration/(60/self.voice[i].bpm)))
       self.voice[i].sample=fname
       print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
       engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
       engine.amenload(i,fname)
-      self.lattice:hard_restart()
       engine.amenamp(i,params:get(i.."amen_amp"))
+      params:set(i.."amen_play",0)
     end)
     params:add{
       type='binary',
@@ -180,8 +223,8 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s=math.random(params:get(i.."amen_loopstart")*1000,params:get(i.."amen_loopend")*1000-125)
-          local e=math.random(s,params:get(i.."amen_loopend")*1000)
+          local s=math.random(util.round(params:get(i.."amen_loopstart")*1000),math.floor(params:get(i.."amen_loopend")*1000-125))
+          local e=math.random(math.floor(s,params:get(i.."amen_loopend")*1000))
           amen:effect_loop(i,s/1000,e/1000)
         else
           amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
@@ -191,12 +234,12 @@ function Amen:setup_parameters()
     params:add {
       type='control',
       id=i..'amen_loop_prob',
-      name='jump prob',
+      name='loop prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
     params:add{
       type='binary',
-      name="loop",
+      name="jump",
       id=i..'amen_jump',
       behavior='trigger',
       action=function(v)
@@ -261,7 +304,7 @@ function Amen:setup_parameters()
         print("amen_scratch "..v)
         if v==1 then
           self.voice[i].disable_reset=true
-          self:effect_scratch(i,3)
+          self:effect_scratch(i,math.random(30,60)/10)
         else
           self.voice[i].disable_reset=false
           self:effect_scratch(i,0)
@@ -300,7 +343,7 @@ end
 function Amen:emit_note(division,t)
   -- keep the sample one beat
   for i=1,2 do
-    if self.voice[i].sample~="" and not self.voice[i].disable_reset then
+    if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       if t/32%(self.voice[i].beats*2)==0 then
         -- reset to get back in sync
         engine.amenreset(i)
@@ -322,7 +365,7 @@ function Amen:emit_note(division,t)
       end
     end
   end
-  
+
   -- dequeue effects
   for i=1,2 do
     if self.voice[i].sample~="" then
@@ -335,44 +378,47 @@ function Amen:emit_note(division,t)
 
   -- enqueue effects randomly
   for i=1,2 do
-    if params:get(i.."amen_loop_prob")/100>math.random() then
+    if params:get(i.."amen_play")==1 then
+    if params:get(i.."amen_loop_prob")/100/8>math.random() then
       params:set(i.."amen_loop",1)
       clock.run(function()
         clock.sleep(math.random(1,50)/10)
         params:set(i.."amen_loop",0)
       end)
     end
-    if params:get(i.."amen_jump_prob")/100>math.random() then
+    if params:get(i.."amen_jump_prob")/100/8>math.random() then
       params:set(i.."amen_jump",1)
+      params:set(i.."amen_jump",0)
     end
-    if params:get(i.."amen_lpf_prob")/100>math.random() then
+    if params:get(i.."amen_lpf_prob")/100/8>math.random() then
       params:set(i.."amen_lpf_effect",1)
       clock.run(function()
-        clock.sleep(math.random(30,70)/10)
+        clock.sleep(math.random(0,30)/10)
         params:set(i.."amen_lpf_effect",0)
       end)
     end
-    if params:get(i.."amen_tapestop_prob")/100>math.random() then
+    if params:get(i.."amen_tapestop_prob")/100/8>math.random() then
       params:set(i.."amen_tapestop",1)
       clock.run(function()
-        clock.sleep(math.random(30,70)/10)
+        clock.sleep(math.random(0,7)/10)
         params:set(i.."amen_tapestop",0)
       end)
     end
-    if params:get(i.."amen_scratch_prob")/100>math.random() then
+    if params:get(i.."amen_scratch_prob")/100/8>math.random() then
       params:set(i.."amen_scratch",1)
       clock.run(function()
         clock.sleep(math.random(0,30)/10)
         params:set(i.."amen_scratch",0)
       end)
     end
-    if params:get(i.."amen_reverse_prob")/100>math.random() then
+    if params:get(i.."amen_reverse_prob")/100/8>math.random() then
       params:set(i.."amen_reverse",1)
       clock.run(function()
         clock.sleep(math.random(0,30)/10)
         params:set(i.."amen_reverse",0)
       end)
     end
+  end
   end
 end
 
@@ -433,11 +479,7 @@ function Amen:process_queue(i,q)
       end)
     end
   elseif q[1]==TYPE_FILTERDOWN then
-    if q[3] then
-      engine.amenlpf(i,q[2],2)
-    else
-      engine.amenlpf(i,params:get(i.."amen_lpf"),2)
-    end
+    engine.amenlpf(i,q[2],2)
   end
 end
 

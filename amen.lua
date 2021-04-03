@@ -263,7 +263,8 @@ function key(k,z)
       elseif sel=="slow" then
         params:set("1amen_tapestop",z)
       elseif sel=="jump" and z==1 then
-        params:set("1amen_jump",z)
+        params:set("1amen_jump",1)
+        params:set("1amen_jump",0)
       elseif sel=="loop" then
         params:set("1amen_loop",z)
       elseif sel=="start" and z==1 then
@@ -332,8 +333,9 @@ function runner_f(c) -- our grid redraw clock
         softcut.buffer_clear()
         softcut.buffer_read_stereo(loop_name,0,0,-1)
         beat_num=amen.voice[1].beats
-        window={0,amen.voice[1].duration}
-        loop_points={0,amen.voice[1].duration}
+        local duration = amen.voice[1].samples/48000
+        window={0,duration}
+        loop_points={0,duration}
       end
       for i=1,2 do
         softcut.render_buffer(i,window[1],window[2]-window[1],128)
@@ -405,6 +407,12 @@ function redraw()
           screen.level(4)
         end
         if math.abs(pos-i)<2 then
+          if j==1 then
+            screen.level(5)
+            screen.move(i,14)
+            screen.line(i,59)
+            screen.stroke()
+          end
           screen.level(15)
         end
         screen.move(i,waveform_center)
@@ -534,4 +542,4 @@ end
 
 
 
- 
+
