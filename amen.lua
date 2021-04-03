@@ -23,10 +23,10 @@ key2on=false
 key3on=false
 breaker_select=1
 breaker_options={
-    {"start","stop"},
-    {"scratch","loop"},
-    {"reverse","jump"},
-    {"slow","lpf"},
+  {"start","stop"},
+  {"scratch","loop"},
+  {"reverse","jump"},
+  {"slow","lpf"},
 }
 -- WAVEFORMS
 waveform_samples={{}}
@@ -69,14 +69,14 @@ function init()
     softcut.render_buffer(i,0,clock.get_beat_sec()*beat_num*2,128)
   end
   softcut.event_render(function(ch,start,i,s)
-    local maxval = 0
+    local maxval=0
     for i,v in ipairs(s) do
-      if v > maxval then
-        maxval = v 
+      if v>maxval then
+        maxval=v
       end
     end
     for i,v in ipairs(s) do
-      s[i] = s[i]/maxval
+      s[i]=s[i]/maxval
     end
     -- normalize to 1
     waveform_samples[ch]=s
@@ -164,17 +164,17 @@ function playback_stop()
 end
 
 function zoom_inout(zoom)
-    local di=zoom*math.abs(loop_points[1]-window[1])
-    local di2=zoom*math.abs(loop_points[1]-window[2])
-    if di2>di then
-      di=di2
-    end
-    window[1]=loop_points[1]-di
-    window[1]=util.clamp(window[1],0,120)
-    window[2]=loop_points[1]+di
-    for i=1,2 do
-      softcut.render_buffer(i,window[1],window[2]-window[1],128)
-    end
+  local di=zoom*math.abs(loop_points[1]-window[1])
+  local di2=zoom*math.abs(loop_points[1]-window[2])
+  if di2>di then
+    di=di2
+  end
+  window[1]=loop_points[1]-di
+  window[1]=util.clamp(window[1],0,120)
+  window[2]=loop_points[1]+di
+  for i=1,2 do
+    softcut.render_buffer(i,window[1],window[2]-window[1],128)
+  end
 end
 
 function zoom_jog(jog)
@@ -186,15 +186,15 @@ function zoom_jog(jog)
       softcut.loop_end(i,loop_points[2])
     end
   end
-  if loop_points[2] > window[2] then
-    window[1]=window[1]+(loop_points[2]-window[2]) 
+  if loop_points[2]>window[2] then
+    window[1]=window[1]+(loop_points[2]-window[2])
     window[2]=loop_points[2]
     for i=1,2 do
       softcut.render_buffer(i,window[1],window[2]-window[1],128)
     end
   end
-  if loop_points[1] < window[1] then
-    window[2]=window[2]+(loop_points[1]-window[1]) 
+  if loop_points[1]<window[1] then
+    window[2]=window[2]+(loop_points[1]-window[1])
     window[1]=loop_points[1]
     for i=1,2 do
       softcut.render_buffer(i,window[1],window[2]-window[1],128)
@@ -215,7 +215,7 @@ function enc(k,d)
     else
       beat_num=util.clamp(beat_num+sign(d),1,64)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
-      if loop_points[2] > window[2] then
+      if loop_points[2]>window[2] then
         window[2]=loop_points[2]
         for i=1,2 do
           softcut.render_buffer(i,window[1],window[2]-window[1],128)
@@ -227,14 +227,14 @@ function enc(k,d)
           softcut.loop_end(i,loop_points[2])
         end
       end
-      if amen.voice[1].sample ~="" then 
-        changed = true
+      if amen.voice[1].sample~="" then
+        changed=true
       end
     end
   else
     if k==1 then
-      breaker_select = util.wrap(breaker_select+sign(d),1,#breaker_options)
-    elseif k==2 then 
+      breaker_select=util.wrap(breaker_select+sign(d),1,#breaker_options)
+    elseif k==2 then
       params:delta("1amen_loopstart",d)
     elseif k==3 then
       params:delta("1amen_loopend",d)
@@ -243,19 +243,19 @@ function enc(k,d)
 end
 
 function key(k,z)
-  if k==2 then 
+  if k==2 then
     key2on=z==1
-  elseif k==3 then 
+  elseif k==3 then
     key3on=z==1
   end
 
   if k==1 and z==1 then
-    breaker = not breaker
+    breaker=not breaker
     breaker_update=true
   end
   if breaker then
     if k>1 then
-      local sel= breaker_options[breaker_select][k-1]
+      local sel=breaker_options[breaker_select][k-1]
       if sel=="reverse" then
         params:set("1amen_reverse",z)
       elseif sel=="scratch" then
@@ -267,9 +267,9 @@ function key(k,z)
       elseif sel=="loop" then
         params:set("1amen_loop",z)
       elseif sel=="start" and z==1 then
-          params:set("1amen_play",1)
+        params:set("1amen_play",1)
       elseif sel=="stop" and z==1 then
-          params:set("1amen_play",0)
+        params:set("1amen_play",0)
       elseif sel=="lpf" then
         params:set("1amen_lpf_effect",z)
       end
@@ -304,20 +304,20 @@ function runner_f(c) -- our grid redraw clock
     end
     last_pos=current_pos[1]
   end
-  if not breaker and not loaded_in_menu and amen.voice[1].sample ~="" then
-    loaded_in_menu = true
+  if not breaker and not loaded_in_menu and amen.voice[1].sample~="" then
+    loaded_in_menu=true
     breaker=true
     breaker_update=true
   end
   if breaker_update then
     breaker_update=false
-    if breaker then 
+    if breaker then
       -- zoom in
       window[1]=loop_points[1]
       window[2]=loop_points[2]
       if playing then
         playback_stop()
-      elseif recording then 
+      elseif recording then
         recording_stop()
       end
       local loop_name=""
@@ -341,7 +341,7 @@ function runner_f(c) -- our grid redraw clock
       engine.amenamp(1,params:get("1amen_amp"))
       recorded=false
     else
-      if amen.voice[1].sample ~= "" then 
+      if amen.voice[1].sample~="" then
         params:set("clock_tempo",amen.voice[1].bpm)
       end
       engine.amenamp(1,0)
@@ -356,20 +356,20 @@ function redraw()
   screen.move(2,8)
   if breaker then
     screen.text("breaker")
-      screen.move(58,8)
-      if key2on then
-        screen.level(15)
-      else
-        screen.level(6)
-      end
-      screen.text_center("["..breaker_options[breaker_select][1].."]")
-      screen.move(103,8)
-      if key3on then
-        screen.level(15)
-      else
-        screen.level(6)
-      end
-      screen.text_center("["..breaker_options[breaker_select][2].."]")  
+    screen.move(58,8)
+    if key2on then
+      screen.level(15)
+    else
+      screen.level(6)
+    end
+    screen.text_center("["..breaker_options[breaker_select][1].."]")
+    screen.move(103,8)
+    if key3on then
+      screen.level(15)
+    else
+      screen.level(6)
+    end
+    screen.text_center("["..breaker_options[breaker_select][2].."]")
   else
     if playing then
       screen.text("maker "..beat_num.." beat @ "..clock.get_tempo().."  [play]")
@@ -385,16 +385,16 @@ function redraw()
   local lp={}
   lp[1]=util.round(util.linlin(window[1],window[2],1,128,loop_points[1]))
   lp[2]=util.round(util.linlin(window[1],window[2],1,128,loop_points[2]))
-  if breaker then 
+  if breaker then
     lp[1]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopstart")))
-    lp[2]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopend"))) 
+    lp[2]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopend")))
   end
-  if loop_points[2] > window[2] then
+  if loop_points[2]>window[2] then
     lp[2]=129
   end
   local pos=util.round(util.linlin(window[1],window[2],1,128,current_pos[1]))
-  if breaker then 
-    pos = util.round(util.linlin(0,1,1,128,current_sc_pos))
+  if breaker then
+    pos=util.round(util.linlin(0,1,1,128,current_sc_pos))
   end
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
     for j=1,2 do
@@ -415,14 +415,14 @@ function redraw()
   end
   if not breaker then
     for i=1,2 do
-        screen.level(15)
-        screen.move(lp[i],10)
-        screen.line_rel(0,80)
-        screen.stroke()
+      screen.level(15)
+      screen.move(lp[i],10)
+      screen.line_rel(0,80)
+      screen.stroke()
     end
   end
 
-  if breaker then 
+  if breaker then
 
   end
 
@@ -520,14 +520,16 @@ end
 
 function save_loop()
   local current_max=0
-  for _, fname in ipairs(list_files(_path.audio.."amen")) do
+  for _,fname in ipairs(list_files(_path.audio.."amen")) do
     local loop_num=tonumber(string.match(fname,'loop(%d*)'))
     if loop_num>current_max then
       current_max=loop_num
     end
   end
-  current_max = current_max + 1
+  current_max=current_max+1
   fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
   softcut.buffer_write_stereo(_path.audio.."amen/"..fname,loop_points[1],loop_points[2]-loop_points[1])
   return _path.audio.."amen/"..fname
-end
+  en
+
+ 

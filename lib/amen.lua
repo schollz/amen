@@ -89,7 +89,8 @@ function Amen:setup_parameters()
         else
           self:effect_rate(i,0)
         end
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i.."amen_amp",
@@ -104,7 +105,8 @@ function Amen:setup_parameters()
           engine.amenamp(i,v)
           engine.amenamp(i+2,0)
         end
-    end}
+    end
+  }
     params:add {
       type='control',
       id=i.."amen_pan",
@@ -112,7 +114,8 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(-1,1,'lin',0,0),
       action=function(v)
         engine.amenpan(i,v)
-      end}
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_lpf',
@@ -121,7 +124,8 @@ function Amen:setup_parameters()
       formatter=Formatters.format_freq,
       action=function(v)
         engine.amenlpf(i,v,0)
-      end}
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_hpf',
@@ -130,7 +134,8 @@ function Amen:setup_parameters()
       formatter=Formatters.format_freq,
       action=function(v)
         engine.amenhpf(i,v)
-      end}
+      end
+    }
         self.debounce_loopstart=nil
     params:add {
       type='control',
@@ -146,7 +151,8 @@ function Amen:setup_parameters()
           clock.sleep(0.5)
           engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
-    end}
+    end
+  }
     self.debounce_loopend=nil
     params:add {
       type='control',
@@ -162,7 +168,8 @@ function Amen:setup_parameters()
           clock.sleep(0.5)
           engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
-    end}
+    end
+  }
 
     -- effects
     params:add{
@@ -179,7 +186,8 @@ function Amen:setup_parameters()
         else
           amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i..'amen_loop_prob',
@@ -194,7 +202,8 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_jump "..v)
         self:effect_jump(i,math.random(1,16)/16)
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i..'amen_jump_prob',
@@ -213,7 +222,8 @@ function Amen:setup_parameters()
         else
           self:effect_filterdown(i,params:get(i.."amen_lpf"))
         end
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i..'amen_lpf_prob',
@@ -234,7 +244,8 @@ function Amen:setup_parameters()
           self.voice[i].disable_reset=false
           self:effect_tapestop(i,true)
         end
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i..'amen_tapestop_prob',
@@ -255,7 +266,8 @@ function Amen:setup_parameters()
           self.voice[i].disable_reset=false
           self:effect_scratch(i,0)
         end
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i..'amen_scratch_prob',
@@ -274,7 +286,8 @@ function Amen:setup_parameters()
         else
           self:effect_rate(i,1)
         end
-    end} 
+    end
+  } 
     params:add {
       type='control',
       id=i..'amen_reverse_prob',
