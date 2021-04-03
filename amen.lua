@@ -8,6 +8,7 @@ breaker=false
 shift=false
 beat_num=8
 recording=false
+recorded=false
 playing=false
 current_pos={0,0}
 current_sc_pos=0
@@ -20,6 +21,8 @@ waveform_samples={{}}
 
 function init()
   -- amen=amenbreaks:new()
+  -- make folder
+  os.execute("mkdir -p ".._path.audio.."amen")
 
   -- initiate softcut
   audio.level_adc_cut(1)
@@ -52,6 +55,16 @@ function init()
     softcut.render_buffer(i,0,clock.get_beat_sec()*beat_num*2,128)
   end
   softcut.event_render(function(ch,start,i,s)
+    local maxval = 0
+    for i,v in ipairs(s) do
+      if v > maxval then
+        maxval = v 
+      end
+    end
+    for i,v in ipairs(s) do
+      s[i] = s[i]/maxval
+    end
+    -- normalize to 1
     waveform_samples[ch]=s
   end)
   softcut.event_phase(function(i,x)
@@ -96,6 +109,7 @@ function recording_stop()
   end
   print("recording_stop")
   recording=false
+  recorded=true
   for i=1,2 do
     softcut.position(i,window[1])
     softcut.rec_level(i,0)
@@ -133,7 +147,7 @@ end
 
 function enc(k,d)
   if not breaker then
-    if k==1 then
+    if k==2 then
       local zoom=0.75
       if d<0 then
         zoom=1.5
@@ -149,12 +163,20 @@ function enc(k,d)
       for i=1,2 do
         softcut.render_buffer(i,window[1],window[2]-window[1],128)
       end
-    elseif k==2 then
+    elseif k==3 then
       loop_points[1]=util.clamp(loop_points[1]+d/100*(window[2]-window[1]),0,120)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
+      for i=1,2 do
+        softcut.loop_start(i,loop_points[1])
+        softcut.loop_end(i,loop_points[2])
+      end
     else
       beat_num=util.clamp(beat_num+sign(d),1,64)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
+      for i=1,2 do
+        softcut.loop_start(i,loop_points[1])
+        softcut.loop_end(i,loop_points[2])
+      end
     end
   end
 end
@@ -162,6 +184,22 @@ end
 function key(k,z)
   if k==1 and z==1 then
     breaker = not breaker
+    if breaker then 
+      -- zoom in
+      window[1]=loop_points[1]
+      window[2]=loop_points[2]
+      for i=1,2 do
+        softcut.render_buffer(i,window[1],window[2]-window[1],128)
+      end
+      if playing then
+        playback_stop()
+      elseif recording then 
+        recording_stop()
+      end
+      if recorded then
+        save_loop()
+      end
+    end
   end
   if breaker then
 
@@ -214,7 +252,7 @@ function redraw()
     end
   end
 
-  waveform_height=80
+  waveform_height=40
   waveform_center=38
   local lp={}
   lp[1]=util.round(util.linlin(window[1],window[2],1,128,loop_points[1]))
@@ -228,7 +266,7 @@ function redraw()
         if i<lp[1] or i>lp[2] then
           screen.level(5)
         end
-        if pos==i then
+        if math.abs(pos-i)<2 then
           screen.level(15)
         end
         screen.move(i,waveform_center)
@@ -237,12 +275,14 @@ function redraw()
       end
     end
   end
-  for i=1,2 do
-    if lp[i]~=128 then
-      screen.level(15)
-      screen.move(lp[i],10)
-      screen.line_rel(0,80)
-      screen.stroke()
+  if not breaker then
+    for i=1,2 do
+      if lp[i]~=128 then
+        screen.level(15)
+        screen.move(lp[i],10)
+        screen.line_rel(0,80)
+        screen.stroke()
+      end
     end
   end
 
@@ -295,4 +335,58 @@ end
 
 function osc_in(path,args,from)
   current_sc_pos=args[2]
+end
+
+
+function _list_files(d,files,recursive)
+  -- list files in a flat table
+  if d=="." or d=="./" then
+    d=""
+  end
+  if d~="" and string.sub(d,-1)~="/" then
+    d=d.."/"
+  end
+  folders={}
+  if recursive then
+    local cmd="ls -ad "..d.."*/ 2>/dev/null"
+    local f=assert(io.popen(cmd,'r'))
+    local out=assert(f:read('*a'))
+    f:close()
+    for s in out:gmatch("%S+") do
+      if not (string.match(s,"ls: ") or s=="../" or s=="./") then
+        files=_list_files(s,files,recursive)
+      end
+    end
+  end
+  do
+    local cmd="ls -p "..d
+    local f=assert(io.popen(cmd,'r'))
+    local out=assert(f:read('*a'))
+    f:close()
+    for s in out:gmatch("%S+") do
+      table.insert(files,d..s)
+    end
+  end
+  return files
+end
+
+function list_files(d,recurisve)
+  if recursive==nil then
+    recursive=false
+  end
+  return _list_files(d,{},recursive)
+end
+
+function save_loop()
+  local current_max=0
+  for _, fname in ipairs(list_files(_path.audio.."amen")) do
+    local loop_num=tonumber(string.match(fname,'loop(%d*)'))
+    if loop_num>current_max then
+      current_max=loop_num
+    end
+  end
+  current_max = current_max + 1
+  fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
+  softcut.buffer_write_stereo(_path.audio.."amen/"..fname,window[1],window[2]-window[1])
+  print_message("loop: "..fname)  
 end
