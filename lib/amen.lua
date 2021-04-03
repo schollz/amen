@@ -51,7 +51,7 @@ function Amen:new(args)
   end
   l.lattice:start()
 
-  
+
   return l
 end
 
@@ -62,19 +62,19 @@ function Amen:setup_parameters()
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
     params:set_action(i.."amen_file",function(fname)
-        local ch,samples,samplerate=audio.file_info(fname)
-        self.voice[i].duration=samples/samplerate
-        self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
-        if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
-          self.voice[i].bpm=clock.get_tempo()
-        end
-        self.voice[i].beats=math.floor(util.round(self.voice[i].duration/(60/self.voice[i].bpm)))
-        self.voice[i].sample=fname
-        print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
-        engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
-        engine.amenload(i,fname)
-        self.lattice:hard_restart()
-        engine.amenamp(i,params:get(i.."amen_amp"))
+      local ch,samples,samplerate=audio.file_info(fname)
+      self.voice[i].duration=samples/samplerate
+      self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
+      if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
+        self.voice[i].bpm=clock.get_tempo()
+      end
+      self.voice[i].beats=math.floor(util.round(self.voice[i].duration/(60/self.voice[i].bpm)))
+      self.voice[i].sample=fname
+      print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
+      engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
+      engine.amenload(i,fname)
+      self.lattice:hard_restart()
+      engine.amenamp(i,params:get(i.."amen_amp"))
     end)
     params:add{
       type='binary',
@@ -89,8 +89,8 @@ function Amen:setup_parameters()
         else
           self:effect_rate(i,0)
         end
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i.."amen_amp",
@@ -98,15 +98,15 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(0,10,'lin',0,0.5,'amp',0.01/10),
       action=function(v)
         print("amenamp "..v)
-        if self.voice[i].split then 
+        if self.voice[i].split then
           engine.amenamp(i,v/2)
           engine.amenamp(i+2,v/2)
         else
           engine.amenamp(i,v)
           engine.amenamp(i+2,0)
         end
-    end
-  }
+      end
+    }
     params:add {
       type='control',
       id=i.."amen_pan",
@@ -136,7 +136,7 @@ function Amen:setup_parameters()
         engine.amenhpf(i,v)
       end
     }
-        self.debounce_loopstart=nil
+    self.debounce_loopstart=nil
     params:add {
       type='control',
       id=i..'amen_loopstart',
@@ -144,15 +144,15 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(0,1,'lin',0,0,'',1/32),
       action=function(v)
         print(i.."amen_loopstart "..v)
-        if self.debounce_loopstart ~= nil then 
+        if self.debounce_loopstart~=nil then
           clock.cancel(self.debounce_loopstart)
         end
         self.debounce_loopstart=clock.run(function()
           clock.sleep(0.5)
           engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
-    end
-  }
+      end
+    }
     self.debounce_loopend=nil
     params:add {
       type='control',
@@ -161,15 +161,15 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(0,1,'lin',0,1.0,'',1/32),
       action=function(v)
         print(i.."amen_loopend "..v)
-        if self.debounce_loopend ~= nil then 
+        if self.debounce_loopend~=nil then
           clock.cancel(self.debounce_loopend)
         end
         self.debounce_loopend=clock.run(function()
           clock.sleep(0.5)
           engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
-    end
-  }
+      end
+    }
 
     -- effects
     params:add{
@@ -180,14 +180,14 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s = math.random(params:get(i.."amen_loopstart")*1000,params:get(i.."amen_loopend")*1000-125)
-          local e = math.random(s,params:get(i.."amen_loopend")*1000)
+          local s=math.random(params:get(i.."amen_loopstart")*1000,params:get(i.."amen_loopend")*1000-125)
+          local e=math.random(s,params:get(i.."amen_loopend")*1000)
           amen:effect_loop(i,s/1000,e/1000)
         else
           amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_loop_prob',
@@ -202,8 +202,8 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_jump "..v)
         self:effect_jump(i,math.random(1,16)/16)
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_jump_prob',
@@ -222,15 +222,15 @@ function Amen:setup_parameters()
         else
           self:effect_filterdown(i,params:get(i.."amen_lpf"))
         end
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_lpf_prob',
       name='lpf prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
-      params:add{
+    params:add{
       type='binary',
       name="tape stop",
       id=i..'amen_tapestop',
@@ -244,8 +244,8 @@ function Amen:setup_parameters()
           self.voice[i].disable_reset=false
           self:effect_tapestop(i,true)
         end
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_tapestop_prob',
@@ -266,8 +266,8 @@ function Amen:setup_parameters()
           self.voice[i].disable_reset=false
           self:effect_scratch(i,0)
         end
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_scratch_prob',
@@ -286,8 +286,8 @@ function Amen:setup_parameters()
         else
           self:effect_rate(i,1)
         end
-    end
-  } 
+      end
+    }
     params:add {
       type='control',
       id=i..'amen_reverse_prob',
@@ -301,10 +301,10 @@ function Amen:emit_note(division,t)
   -- keep the sample one beat
   for i=1,2 do
     if self.voice[i].sample~="" and not self.voice[i].disable_reset then
-      if t/32%(self.voice[i].beats*2) == 0 then
+      if t/32%(self.voice[i].beats*2)==0 then
         -- reset to get back in sync
         engine.amenreset(i)
-        if self.voice[i].split then 
+        if self.voice[i].split then
           engine.amenreset(i+2)
         end
       end
@@ -375,7 +375,7 @@ function Amen:process_queue(i,q)
       engine.amenpan(i,0)
       self.voice[i].split=false
     end
-    if self.voice[i].split then 
+    if self.voice[i].split then
       engine.amenamp(i,params:get(i.."amen_amp")/2)
       engine.amenamp(i+2,params:get(i.."amen_amp")/2)
     else
@@ -390,13 +390,13 @@ function Amen:process_queue(i,q)
         print("reseting loop")
         engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
       end)
-    end  
+    end
   elseif q[1]==TYPE_FILTERDOWN then
     if q[3] then
       engine.amenlpf(i,q[2],2)
     else
       engine.amenlpf(i,params:get(i.."amen_lpf"),2)
-    end    
+    end
   end
 end
 
@@ -409,9 +409,9 @@ function Amen:effect_jump(i,val)
 end
 
 function Amen:effect_tapestop(i,on,duration)
-  local rate = 0
+  local rate=0
   if on then
-    rate = self.voice[i].rate
+    rate=self.voice[i].rate
   end
   table.insert(self.voice[i].queue,{TYPE_TAPESTOP,rate,duration})
 end

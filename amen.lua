@@ -530,6 +530,8 @@ function save_loop()
   fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
   softcut.buffer_write_stereo(_path.audio.."amen/"..fname,loop_points[1],loop_points[2]-loop_points[1])
   return _path.audio.."amen/"..fname
-  en
+end
+
+
 
  
