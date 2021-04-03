@@ -231,9 +231,9 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s=math.random(util.round(params:get(i.."amen_loopstart")*1000),math.floor(params:get(i.."amen_loopend")*1000-500))
-          local e=math.random(math.floor(s)+100,params:get(i.."amen_loopend")*1000)
-          self:effect_loop(i,s/1000,e/1000)
+          local s=self.current_sc_pos-clock.get_beat_sec()/self.voice[i].duration
+          local e=s+clock.get_beat_sec()/self.voice[i].duration
+          self:effect_loop(i,s,e)
         else
           self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end
@@ -254,7 +254,7 @@ function Amen:setup_parameters()
         print(i.."amen_stutter "..v)
         if v==1 then
           local s=self.current_sc_pos
-          local e=s+math.random(15,100)/self.voice[i].duration/1000
+          local e=s+math.random(30,100)/self.voice[i].duration/1000
           print("stutter",s,e)
           self:effect_loop(i,s,e)
         else
