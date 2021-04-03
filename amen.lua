@@ -5,7 +5,7 @@
 -- amenbreaks=include("amen/lib/amen")
 
 shift=false
-beat_num=2
+beat_num=8
 recording=false
 playing=false
 current_pos={0,0}
@@ -56,7 +56,7 @@ function init()
     current_pos[i]=x
   end)
   softcut.poll_start_phase()
-  loop_points={0,clock.get_beat_sec()*beat_num}
+  loop_points={clock.get_beat_sec()*4,clock.get_beat_sec()*(beat_num+4)}
   window={0,clock.get_beat_sec()*beat_num*2}
   runner=metro.init()
   runner.time=1/30
