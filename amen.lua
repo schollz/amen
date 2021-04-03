@@ -262,22 +262,16 @@ function key(k,z)
         params:set("1amen_scratch",z)
       elseif sel=="slow" then
         params:set("1amen_tapestop",z)
-      elseif sel=="jump" then
-        amen:effect_jump(1,math.random(1,8)/8)
+      elseif sel=="jump" and z==1 then
+        params:set("1amen_jump",z)
       elseif sel=="loop" then
-        if z==1 then
-          local start = math.random(1,15)
-          amen:effect_loop(1,start/16,math.random(start+1,16)/16)
-        else
-          amen:effect_loop(1,math.random(1,8)/16,math.random(8,16)/16,0.1)
-        end
+        params:set("1amen_loop",z)
       elseif sel=="start" and z==1 then
-          amen:effect_rate(1,1)
-          amen.lattice:hard_restart()
+          params:set("1amen_play",1)
       elseif sel=="stop" and z==1 then
-          amen:effect_rate(1,0)
+          params:set("1amen_play",0)
       elseif sel=="lpf" then
-          amen:effect_filterdown(1,300,z==1)
+        params:set("1amen_lpf_effect",z)
       end
     end
   else

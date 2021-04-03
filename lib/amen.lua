@@ -57,7 +57,7 @@ end
 
 function Amen:setup_parameters()
   -- add parameters
-  params:add_group("AMEN",14*2)
+  params:add_group("AMEN",17*2)
   for i=1,2 do
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
@@ -76,11 +76,49 @@ function Amen:setup_parameters()
         self.lattice:hard_restart()
         engine.amenamp(i,params:get(i.."amen_amp"))
     end)
+    params:add{
+      type='binary',
+      name="play",
+      id=i..'amen_play',
+      behavior='toggle',
+      action=function(v)
+        print("amen_play "..v)
+        if v==1 then
+          self:effect_rate(i,1)
+          amen.lattice:hard_restart()
+        else
+          self:effect_rate(i,0)
+        end
+    end} 
+    params:add{
+      type='binary',
+      name="loop",
+      id=i..'amen_loop',
+      behavior='momentary',
+      action=function(v)
+        print(i.."amen_loop "..v)
+        if v==1 then
+          local s = math.random(params:get(i.."amen_loopstart")*1000,params:get(i.."amen_loopend")*1000-125)
+          local e = math.random(s,params:get(i.."amen_loopend")*1000)
+          amen:effect_loop(i,s/1000,e/1000)
+        else
+          amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        end
+    end} 
+    params:add{
+      type='binary',
+      name="loop",
+      id=i..'amen_jump',
+      behavior='trigger',
+      action=function(v)
+        print(i.."amen_jump "..v)
+        self:effect_jump(i,math.random(1,16)/16)
+    end} 
     params:add {
       type='control',
       id=i.."amen_amp",
       name="amp",
-      controlspec=controlspec.new(0,10,'lin',0,1.0,'amp',0.01/10),
+      controlspec=controlspec.new(0,10,'lin',0,0.5,'amp',0.01/10),
       action=function(v)
         print("amenamp "..v)
         if self.voice[i].split then 
@@ -108,6 +146,25 @@ function Amen:setup_parameters()
       action=function(v)
         engine.amenlpf(i,v,0)
       end}
+    params:add{
+      type='binary',
+      name="lpf effect",
+      id=i..'amen_lpf_effect',
+      behavior='momentary',
+      action=function(v)
+        print("amen_lpf_effect "..v)
+        if v==1 then
+          self:effect_filterdown(i,100)
+        else
+          self:effect_filterdown(i,params:get(i.."amen_lpf"))
+        end
+    end} 
+    params:add {
+      type='control',
+      id=i..'amen_lpf_prob',
+      name='lpf prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
     params:add {
       type='control',
       id=i..'amen_hpf',
@@ -194,7 +251,7 @@ function Amen:setup_parameters()
         end
         self.debounce_loopstart=clock.run(function()
           clock.sleep(0.5)
-          self:effect_loop(i,v,params:get(i.."amen_loopend"))
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
     end}
     self.debounce_loopend=nil
@@ -210,7 +267,7 @@ function Amen:setup_parameters()
         end
         self.debounce_loopend=clock.run(function()
           clock.sleep(0.5)
-          self:effect_loop(i,params:get(i.."amen_loopstart"),v)
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
     end}
   end
@@ -343,12 +400,12 @@ function Amen:effect_loop(i,loopStart,loopEnd,duration)
   table.insert(self.voice[i].queue,{TYPE_LOOP,loopStart,loopEnd,duration})
 end
 
-function Amen:effect_split(i,on)
-  table.insert(self.voice[i].queue,{TYPE_SPLIT,on})
+function Amen:effect_filterdown(i,fc,duration)
+  table.insert(self.voice[i].queue,{TYPE_FILTERDOWN,fc,duration})
 end
 
-function Amen:effect_filterdown(i,fc,on)
-  table.insert(self.voice[i].queue,{TYPE_FILTERDOWN,fc,on})
+function Amen:effect_split(i,on)
+  table.insert(self.voice[i].queue,{TYPE_SPLIT,on})
 end
 
 
