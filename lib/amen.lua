@@ -234,8 +234,7 @@ function Amen:setup_parameters()
           self.voice[i].disable_reset=false
           self:effect_tapestop(i,true)
         end
-      end
-    } 
+    end} 
     params:add {
       type='control',
       id=i..'amen_tapestop_prob',
@@ -256,8 +255,7 @@ function Amen:setup_parameters()
           self.voice[i].disable_reset=false
           self:effect_scratch(i,0)
         end
-      end
-    } 
+    end} 
     params:add {
       type='control',
       id=i..'amen_scratch_prob',
@@ -276,8 +274,7 @@ function Amen:setup_parameters()
         else
           self:effect_rate(i,1)
         end
-      end
-    } 
+    end} 
     params:add {
       type='control',
       id=i..'amen_reverse_prob',
