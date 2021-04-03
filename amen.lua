@@ -12,6 +12,7 @@ current_pos={0,0}
 last_pos=0
 loop_points={0,0}
 window={0,0}
+show_message=nil
 -- WAVEFORMS
 waveform_samples={{}}
 
@@ -230,6 +231,21 @@ function redraw()
       screen.stroke()
     end
   end
+
+
+  if show_message~=nil then
+    screen.level(0)
+    x=64
+    y=28
+    w=string.len(show_message)*6
+    screen.rect(x-w/2,y,w,10)
+    screen.fill()
+    screen.level(15)
+    screen.rect(x-w/2,y,w,10)
+    screen.stroke()
+    screen.move(x,y+7)
+    screen.text_center(show_message)
+  end
   screen.update()
 end
 
@@ -249,4 +265,15 @@ end
 
 function rerun()
   norns.script.load(norns.state.script)
+end
+
+
+function print_message(message)
+  clock.run(function()
+    show_message=message
+    redraw()
+    clock.sleep(2)
+    show_message=nil
+    redraw()
+  end)
 end
