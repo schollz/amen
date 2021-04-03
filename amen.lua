@@ -4,11 +4,13 @@
 
 -- amenbreaks=include("amen/lib/amen")
 
+breaker=false
 shift=false
 beat_num=8
 recording=false
 playing=false
 current_pos={0,0}
+current_sc_pos=0
 last_pos=0
 loop_points={0,0}
 window={0,0}
@@ -59,11 +61,16 @@ function init()
   softcut.poll_start_phase()
   loop_points={clock.get_beat_sec()*4,clock.get_beat_sec()*(beat_num+4)}
   window={0,clock.get_beat_sec()*beat_num*2}
+
+  -- start runner
   runner=metro.init()
   runner.time=1/30
   runner.count=-1
   runner.event=runner_f
   runner:start()
+
+  -- osc input
+  osc.event=osc_in
 end
 
 function recording_start()
@@ -125,8 +132,8 @@ end
 
 
 function enc(k,d)
-  if k==1 then
-    if not shift then
+  if not breaker then
+    if k==1 then
       local zoom=0.75
       if d<0 then
         zoom=1.5
@@ -139,38 +146,41 @@ function enc(k,d)
       window[1]=loop_points[1]-di
       window[1]=util.clamp(window[1],0,120)
       window[2]=loop_points[1]+di
-      -- else
-      --   window[2]=util.clamp(window[2]+d/10,window[1],120)
+      for i=1,2 do
+        softcut.render_buffer(i,window[1],window[2]-window[1],128)
+      end
+    elseif k==2 then
+      loop_points[1]=util.clamp(loop_points[1]+d/100*(window[2]-window[1]),0,120)
+      loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
+    else
+      beat_num=util.clamp(beat_num+sign(d),1,64)
+      loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
     end
-    for i=1,2 do
-      softcut.render_buffer(i,window[1],window[2]-window[1],128)
-    end
-  elseif k==2 then
-    loop_points[1]=util.clamp(loop_points[1]+d/100*(window[2]-window[1]),0,120)
-    loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
-  else
-    beat_num=util.clamp(beat_num+sign(d),1,64)
-    loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
   end
 end
 
 function key(k,z)
-  if k==1 then
-    shift=z==1
-  elseif k==2 and z==1 then
-    if not recording then
-      recording_start()
-    elseif recording then
-      recording_stop()
-    end
-  elseif k==3 and z==1 then
-    if recording then
-      recording_stop()
-    end
-    if not playing then
-      playback_start()
-    else
-      playback_stop()
+  if k==1 and z==1 then
+    breaker = not breaker
+  end
+  if breaker then
+
+  else
+    if k==2 and z==1 then
+      if not recording then
+        recording_start()
+      elseif recording then
+        recording_stop()
+      end
+    elseif k==3 and z==1 then
+      if recording then
+        recording_stop()
+      end
+      if not playing then
+        playback_start()
+      else
+        playback_stop()
+      end
     end
   end
 end
@@ -192,12 +202,16 @@ function redraw()
   screen.clear()
   screen.level(15)
   screen.move(2,8)
-  if playing then
-    screen.text(beat_num.." beat loop [playing]")
-  elseif recording then
-    screen.text(beat_num.." beat loop [recording]")
+  if breaker then
+    screen.text("breaker")
   else
-    screen.text(beat_num.." beat loop ")
+    if playing then
+      screen.text("maker "..beat_num.." beat loop   [playing]")
+    elseif recording then
+      screen.text("maker "..beat_num.." beat loop [recording]")
+    else
+      screen.text("maker "..beat_num.." beat loop ")
+    end
   end
 
   waveform_height=80
@@ -276,4 +290,9 @@ function print_message(message)
     show_message=nil
     redraw()
   end)
+end
+
+
+function osc_in(path,args,from)
+  current_sc_pos=args[2]
 end
