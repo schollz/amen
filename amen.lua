@@ -333,7 +333,7 @@ function runner_f(c) -- our grid redraw clock
         softcut.buffer_clear()
         softcut.buffer_read_stereo(loop_name,0,0,-1)
         beat_num=amen.voice[1].beats
-        local duration = amen.voice[1].samples/48000
+        local duration=amen.voice[1].samples/48000
         window={0,duration}
         loop_points={0,duration}
       end

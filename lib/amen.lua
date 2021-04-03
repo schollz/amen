@@ -77,7 +77,7 @@ function Amen:setup_midi()
         -- end
         local msg=midi.to_msg(data)
         if msg.type=="clock" then do return end end
-        -- OP-1 fix for transport
+-- OP-1 fix for transport
         if msg.type=='start' or msg.type=='continue' then
           print(name.." starting clock")
           for i=1,2 do
@@ -379,46 +379,46 @@ function Amen:emit_note(division,t)
   -- enqueue effects randomly
   for i=1,2 do
     if params:get(i.."amen_play")==1 then
-    if params:get(i.."amen_loop_prob")/100/8>math.random() then
-      params:set(i.."amen_loop",1)
-      clock.run(function()
-        clock.sleep(math.random(1,50)/10)
-        params:set(i.."amen_loop",0)
-      end)
+      if params:get(i.."amen_loop_prob")/100/8>math.random() then
+        params:set(i.."amen_loop",1)
+        clock.run(function()
+          clock.sleep(math.random(1,50)/10)
+          params:set(i.."amen_loop",0)
+        end)
+      end
+      if params:get(i.."amen_jump_prob")/100/8>math.random() then
+        params:set(i.."amen_jump",1)
+        params:set(i.."amen_jump",0)
+      end
+      if params:get(i.."amen_lpf_prob")/100/8>math.random() then
+        params:set(i.."amen_lpf_effect",1)
+        clock.run(function()
+          clock.sleep(math.random(0,30)/10)
+          params:set(i.."amen_lpf_effect",0)
+        end)
+      end
+      if params:get(i.."amen_tapestop_prob")/100/8>math.random() then
+        params:set(i.."amen_tapestop",1)
+        clock.run(function()
+          clock.sleep(math.random(0,7)/10)
+          params:set(i.."amen_tapestop",0)
+        end)
+      end
+      if params:get(i.."amen_scratch_prob")/100/8>math.random() then
+        params:set(i.."amen_scratch",1)
+        clock.run(function()
+          clock.sleep(math.random(0,30)/10)
+          params:set(i.."amen_scratch",0)
+        end)
+      end
+      if params:get(i.."amen_reverse_prob")/100/8>math.random() then
+        params:set(i.."amen_reverse",1)
+        clock.run(function()
+          clock.sleep(math.random(0,30)/10)
+          params:set(i.."amen_reverse",0)
+        end)
+      end
     end
-    if params:get(i.."amen_jump_prob")/100/8>math.random() then
-      params:set(i.."amen_jump",1)
-      params:set(i.."amen_jump",0)
-    end
-    if params:get(i.."amen_lpf_prob")/100/8>math.random() then
-      params:set(i.."amen_lpf_effect",1)
-      clock.run(function()
-        clock.sleep(math.random(0,30)/10)
-        params:set(i.."amen_lpf_effect",0)
-      end)
-    end
-    if params:get(i.."amen_tapestop_prob")/100/8>math.random() then
-      params:set(i.."amen_tapestop",1)
-      clock.run(function()
-        clock.sleep(math.random(0,7)/10)
-        params:set(i.."amen_tapestop",0)
-      end)
-    end
-    if params:get(i.."amen_scratch_prob")/100/8>math.random() then
-      params:set(i.."amen_scratch",1)
-      clock.run(function()
-        clock.sleep(math.random(0,30)/10)
-        params:set(i.."amen_scratch",0)
-      end)
-    end
-    if params:get(i.."amen_reverse_prob")/100/8>math.random() then
-      params:set(i.."amen_reverse",1)
-      clock.run(function()
-        clock.sleep(math.random(0,30)/10)
-        params:set(i.."amen_reverse",0)
-      end)
-    end
-  end
   end
 end
 
