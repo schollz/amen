@@ -47,7 +47,9 @@ Engine_Amen : CroneEngine {
                 snd = LPF.ar(snd,lpf);
                 snd = HPF.ar(snd,hpf);
                 snd = Balance2.ar(snd[0],snd[1],pan,level:amp);
-                SendTrig.kr(Impulse.kr(30),0,A2K.kr(pos)/BufFrames.kr(bufnum)*2);
+                if (i==0, {                    
+                SendTrig.kr(Impulse.kr(30),0,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));
+                    },{});
                 Out.ar(0,snd)
             }).add; 
         });
@@ -60,7 +62,7 @@ Engine_Amen : CroneEngine {
             },{})
         },'/tr', context.server.addr);
 
-        playerAmen = Array.fill(2,{arg i;
+        playerAmen = Array.fill(4,{arg i;
             Synth("playerAmen"++i, target:context.xg);
         });
 

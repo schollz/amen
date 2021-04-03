@@ -19,6 +19,13 @@ last_pos=0
 loop_points={0,0}
 window={0,0}
 show_message=nil
+key2on=false
+key3on=false
+breaker_select=1
+breaker_options={
+    {"scratch","loop"},
+    {"reverse","jump"},
+}
 -- WAVEFORMS
 waveform_samples={{}}
 engine.name="Amen"
@@ -171,12 +178,14 @@ function enc(k,d)
       for i=1,2 do
         softcut.render_buffer(i,window[1],window[2]-window[1],128)
       end
-    elseif k==3 then
+    elseif k==3 and not recording then
       loop_points[1]=util.clamp(loop_points[1]+d/100*(window[2]-window[1]),0,120)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
-      for i=1,2 do
-        softcut.loop_start(i,loop_points[1])
-        softcut.loop_end(i,loop_points[2])
+      if not recording then
+        for i=1,2 do
+          softcut.loop_start(i,loop_points[1])
+          softcut.loop_end(i,loop_points[2])
+        end
       end
       if loop_points[2] > window[2] then
         window[1]=window[1]+(loop_points[2]-window[2]) 
@@ -201,27 +210,52 @@ function enc(k,d)
           softcut.render_buffer(i,window[1],window[2]-window[1],128)
         end
       end
-      for i=1,2 do
-        softcut.loop_start(i,loop_points[1])
-        softcut.loop_end(i,loop_points[2])
+      if not recording then
+        for i=1,2 do
+          softcut.loop_start(i,loop_points[1])
+          softcut.loop_end(i,loop_points[2])
+        end
       end
       if amen.voice[1].sample ~="" then 
         changed = true
       end
     end
+  else
+    if k==1 then
+      breaker_select = util.wrap(breaker_select+sign(d),1,#breaker_options)
+    elseif k==2 then 
+      params:delta("1amen_loopstart",d)
+    elseif k==3 then
+      params:delta("1amen_loopend",d)
+    end
   end
 end
 
 function key(k,z)
+  if k==2 then 
+    key2on=z==1
+  elseif k==3 then 
+    key3on=z==1
+  end
+
   if k==1 and z==1 then
     breaker = not breaker
     breaker_update=true
   end
   if breaker then
-    if k==2 then
-      params:set("1amen_tapestop",z)
-    elseif k==3 then
-      params:set("1amen_scratch",z)
+    if k>1 then
+      local sel= breaker_options[breaker_select][k-1]
+      if sel=="reverse" then
+        params:set("1amen_reverse",z)
+      elseif sel=="scratch" then
+        params:set("1amen_scratch",z)
+      elseif sel=="tape stop" then
+        params:set("1amen_tapestop",z)
+      elseif sel=="jump" then
+        amen:effect_jump(1,math.random(1,8)/8)
+      elseif sel=="loop" then
+        amen:effect_loop(1,math.random(1,8)/16,math.random(8,16)/16,math.random(3,12))
+      end
     end
   else
     if k==2 and z==1 then
@@ -305,6 +339,20 @@ function redraw()
   screen.move(2,8)
   if breaker then
     screen.text("breaker")
+      screen.move(58,8)
+      if key2on then
+        screen.level(15)
+      else
+        screen.level(6)
+      end
+      screen.text_center("["..breaker_options[breaker_select][1].."]")
+      screen.move(103,8)
+      if key3on then
+        screen.level(15)
+      else
+        screen.level(6)
+      end
+      screen.text_center("["..breaker_options[breaker_select][2].."]")  
   else
     if playing then
       screen.text("maker "..beat_num.." beat @ "..clock.get_tempo().."  [play]")
@@ -320,20 +368,24 @@ function redraw()
   local lp={}
   lp[1]=util.round(util.linlin(window[1],window[2],1,128,loop_points[1]))
   lp[2]=util.round(util.linlin(window[1],window[2],1,128,loop_points[2]))
+  if breaker then 
+    lp[1]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopstart")))
+    lp[2]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopend"))) 
+  end
   if loop_points[2] > window[2] then
     lp[2]=129
   end
   local pos=util.round(util.linlin(window[1],window[2],1,128,current_pos[1]))
   if breaker then 
-    pos = util.round(util.linlin(window[1],window[2],1,128,current_sc_pos))
+    pos = util.round(util.linlin(0,1,1,128,current_sc_pos))
   end
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
     for j=1,2 do
       for i,s in ipairs(waveform_samples[j]) do
         local height=util.clamp(0,waveform_height,util.round(math.abs(s)*waveform_height))
-        screen.level(10)
+        screen.level(13)
         if i<lp[1] or i>lp[2] then
-          screen.level(5)
+          screen.level(4)
         end
         if math.abs(pos-i)<2 then
           screen.level(15)
@@ -405,6 +457,7 @@ end
 
 
 function osc_in(path,args,from)
+  -- print(args[2])
   current_sc_pos=args[2]
 end
 
@@ -458,6 +511,6 @@ function save_loop()
   end
   current_max = current_max + 1
   fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
-  softcut.buffer_write_stereo(_path.audio.."amen/"..fname,window[1],window[2]-window[1])
-  return _path.audio.."amen/"..fname,window[1],window[2]-window[1]
+  softcut.buffer_write_stereo(_path.audio.."amen/"..fname,loop_points[1],loop_points[2]-loop_points[1])
+  return _path.audio.."amen/"..fname
 end
