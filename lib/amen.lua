@@ -50,7 +50,7 @@ function Amen:new(args)
   l.lattice:start()
 
 
-  l:load(1,_path.audio.."amen/loop2_bpm120.wav")
+  
   return l
 end
 
@@ -60,8 +60,20 @@ function Amen:setup_parameters()
   for i=1,2 do
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
-    params:set_action(i.."amen_file",function(v)
-      self:load(i,v)
+    params:set_action(i.."amen_file",function(fname)
+        local ch,samples,samplerate=audio.file_info(fname)
+        self.voice[i].duration=samples/samplerate
+        self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
+        if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
+          self.voice[i].bpm=clock.get_tempo()
+        end
+        self.voice[i].beats=math.floor(util.round(self.voice[i].duration/(60/self.voice[i].bpm)))
+        self.voice[i].sample=fname
+        print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
+        engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
+        engine.amenload(i,fname)
+        self.lattice:hard_restart()
+        engine.amenamp(i,params:get(i.."amen_amp"))
     end)
     params:add {
       type='control',
@@ -69,6 +81,7 @@ function Amen:setup_parameters()
       name="amp",
       controlspec=controlspec.new(0,10,'lin',0,1.0,'amp',0.01/10),
       action=function(v)
+        print("amenamp "..v)
         engine.amenamp(i,v)
     end}
     params:add {
@@ -168,8 +181,7 @@ function Amen:emit_note(division,t)
   for i=1,2 do
     if self.voice[i].sample~="" and not self.voice[i].disable_reset then
       if t/32%(self.voice[i].beats*2) == 0 then
-        -- randomly reset to get back in sync
-        print("reseting")
+        -- reset to get back in sync
         engine.amenreset(i)
       end
     end
@@ -177,6 +189,7 @@ function Amen:emit_note(division,t)
 
   -- register changes in the bpm
   if self.bpm_current~=clock.get_tempo() then
+    print("updating tempo "..self.bpm_current.."->"..clock.get_tempo())
     self.bpm_current=clock.get_tempo()
     for i=1,2 do
       if self.voice[i].sample~="" then
@@ -239,23 +252,6 @@ end
 function Amen:effect_rate(i,val)
   table.insert(self.voice[i].queue,{TYPE_RATE,val})
 end
-
-function Amen:load(i,fname)
-  local ch,samples,samplerate=audio.file_info(fname)
-  local duration=samples/samplerate
-  print(duration)
-  self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
-  if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
-    self.voice[i].bpm=clock.get_tempo()
-  end
-  self.voice[i].beats=math.floor(util.round(duration/(60/self.voice[i].bpm)))
-  self.voice[i].sample=fname
-  print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
-  engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
-  engine.amenload(i,fname)
-  engine.amenamp(i,0.5)
-end
-
 
 
 return Amen

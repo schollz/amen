@@ -65,7 +65,12 @@ Engine_Amen : CroneEngine {
         });
 
         this.addCommand("amenrelease","", { arg msg;
-            (0..2).do({arg i; sampleBuffAmen[i].free});
+            (0..2).do({arg i; 
+                sampleBuffAmen[i].free;
+                sampleBuffAmen[i].free;
+                playerAmen[i].set(\amp,0);
+                playerAmen[i+2].set(\amp,0);
+            });
         });
 
         this.addCommand("amenload","is", { arg msg;
