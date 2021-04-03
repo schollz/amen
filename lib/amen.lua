@@ -90,30 +90,6 @@ function Amen:setup_parameters()
           self:effect_rate(i,0)
         end
     end} 
-    params:add{
-      type='binary',
-      name="loop",
-      id=i..'amen_loop',
-      behavior='momentary',
-      action=function(v)
-        print(i.."amen_loop "..v)
-        if v==1 then
-          local s = math.random(params:get(i.."amen_loopstart")*1000,params:get(i.."amen_loopend")*1000-125)
-          local e = math.random(s,params:get(i.."amen_loopend")*1000)
-          amen:effect_loop(i,s/1000,e/1000)
-        else
-          amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
-        end
-    end} 
-    params:add{
-      type='binary',
-      name="loop",
-      id=i..'amen_jump',
-      behavior='trigger',
-      action=function(v)
-        print(i.."amen_jump "..v)
-        self:effect_jump(i,math.random(1,16)/16)
-    end} 
     params:add {
       type='control',
       id=i.."amen_amp",
@@ -146,6 +122,85 @@ function Amen:setup_parameters()
       action=function(v)
         engine.amenlpf(i,v,0)
       end}
+    params:add {
+      type='control',
+      id=i..'amen_hpf',
+      name='high-pass filter',
+      controlspec=controlspec.new(20,20000,'exp',0,20,'Hz'),
+      formatter=Formatters.format_freq,
+      action=function(v)
+        engine.amenhpf(i,v)
+      end}
+        self.debounce_loopstart=nil
+    params:add {
+      type='control',
+      id=i..'amen_loopstart',
+      name='loop start',
+      controlspec=controlspec.new(0,1,'lin',0,0,'',1/32),
+      action=function(v)
+        print(i.."amen_loopstart "..v)
+        if self.debounce_loopstart ~= nil then 
+          clock.cancel(self.debounce_loopstart)
+        end
+        self.debounce_loopstart=clock.run(function()
+          clock.sleep(0.5)
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        end)
+    end}
+    self.debounce_loopend=nil
+    params:add {
+      type='control',
+      id=i..'amen_loopend',
+      name='loop end',
+      controlspec=controlspec.new(0,1,'lin',0,1.0,'',1/32),
+      action=function(v)
+        print(i.."amen_loopend "..v)
+        if self.debounce_loopend ~= nil then 
+          clock.cancel(self.debounce_loopend)
+        end
+        self.debounce_loopend=clock.run(function()
+          clock.sleep(0.5)
+          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        end)
+    end}
+
+    -- effects
+    params:add{
+      type='binary',
+      name="loop",
+      id=i..'amen_loop',
+      behavior='momentary',
+      action=function(v)
+        print(i.."amen_loop "..v)
+        if v==1 then
+          local s = math.random(params:get(i.."amen_loopstart")*1000,params:get(i.."amen_loopend")*1000-125)
+          local e = math.random(s,params:get(i.."amen_loopend")*1000)
+          amen:effect_loop(i,s/1000,e/1000)
+        else
+          amen:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        end
+    end} 
+    params:add {
+      type='control',
+      id=i..'amen_loop_prob',
+      name='jump prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
+    params:add{
+      type='binary',
+      name="loop",
+      id=i..'amen_jump',
+      behavior='trigger',
+      action=function(v)
+        print(i.."amen_jump "..v)
+        self:effect_jump(i,math.random(1,16)/16)
+    end} 
+    params:add {
+      type='control',
+      id=i..'amen_jump_prob',
+      name='jump prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
     params:add{
       type='binary',
       name="lpf effect",
@@ -165,16 +220,7 @@ function Amen:setup_parameters()
       name='lpf prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
-    params:add {
-      type='control',
-      id=i..'amen_hpf',
-      name='high-pass filter',
-      controlspec=controlspec.new(20,20000,'exp',0,20,'Hz'),
-      formatter=Formatters.format_freq,
-      action=function(v)
-        engine.amenhpf(i,v)
-      end}
-    params:add{
+      params:add{
       type='binary',
       name="tape stop",
       id=i..'amen_tapestop',
@@ -238,38 +284,6 @@ function Amen:setup_parameters()
       name='reverse prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
-    self.debounce_loopstart=nil
-    params:add {
-      type='control',
-      id=i..'amen_loopstart',
-      name='loop start',
-      controlspec=controlspec.new(0,1,'lin',0,0,'',1/32),
-      action=function(v)
-        print(i.."amen_loopstart "..v)
-        if self.debounce_loopstart ~= nil then 
-          clock.cancel(self.debounce_loopstart)
-        end
-        self.debounce_loopstart=clock.run(function()
-          clock.sleep(0.5)
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
-        end)
-    end}
-    self.debounce_loopend=nil
-    params:add {
-      type='control',
-      id=i..'amen_loopend',
-      name='loop end',
-      controlspec=controlspec.new(0,1,'lin',0,1.0,'',1/32),
-      action=function(v)
-        print(i.."amen_loopend "..v)
-        if self.debounce_loopend ~= nil then 
-          clock.cancel(self.debounce_loopend)
-        end
-        self.debounce_loopend=clock.run(function()
-          clock.sleep(0.5)
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
-        end)
-    end}
   end
 end
 
