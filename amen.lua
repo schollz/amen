@@ -2,8 +2,9 @@
 -- get that amen break.
 --
 
--- amenbreaks=include("amen/lib/amen")
+amenbreaks=include("amen/lib/amen")
 
+loaded=false
 breaker=false
 shift=false
 beat_num=8
@@ -18,9 +19,11 @@ window={0,0}
 show_message=nil
 -- WAVEFORMS
 waveform_samples={{}}
+engine.name="Amen"
 
 function init()
-  -- amen=amenbreaks:new()
+  amen=amenbreaks:new()
+
   -- make folder
   os.execute("mkdir -p ".._path.audio.."amen")
 
@@ -202,7 +205,11 @@ function key(k,z)
     end
   end
   if breaker then
-
+    if k==2 then
+      params:set("1amen_tapestop",z)
+    elseif k==3 then
+      params:set("1amen_scratch",z)
+    end
   else
     if k==2 and z==1 then
       if not recording then
@@ -233,6 +240,21 @@ function runner_f(c) -- our grid redraw clock
     end
     last_pos=current_pos[1]
   end
+  if not loaded then
+    -- check if loaded
+    if amen.voice[1].sample ~= "" then
+      breaker=true 
+      print("loaded via menu")
+      loaded=true
+      local ch,samples,samplerate=audio.file_info(amen.voice[1].sample)
+      local duration=samples/samplerate
+      softcut.buffer_read_stereo(amen.voice[1].sample,0,0,-1)
+      window={0,duration}
+      for i=1,2 do
+        softcut.render_buffer(i,window[1],window[2]-window[1],128)
+      end
+    end
+  end
   redraw()
 end
 
@@ -258,6 +280,9 @@ function redraw()
   lp[1]=util.round(util.linlin(window[1],window[2],1,128,loop_points[1]))
   lp[2]=util.round(util.linlin(window[1],window[2],1,128,loop_points[2]))
   local pos=util.round(util.linlin(window[1],window[2],1,128,current_pos[1]))
+  if breaker then 
+    pos = util.round(util.linlin(window[1],window[2],1,128,current_sc_pos))
+  end
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
     for j=1,2 do
       for i,s in ipairs(waveform_samples[j]) do
@@ -284,6 +309,10 @@ function redraw()
         screen.stroke()
       end
     end
+  end
+
+  if breaker then 
+
   end
 
 
