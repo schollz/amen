@@ -9,7 +9,7 @@ loaded_in_menu=false
 changed=false
 breaker=false
 shift=false
-beat_num=8
+beat_num=4
 recording=false
 recorded=false
 playing=false
@@ -84,7 +84,7 @@ function init()
     current_pos[i]=x
   end)
   softcut.poll_start_phase()
-  loop_points={clock.get_beat_sec()*4,clock.get_beat_sec()*(beat_num+4)}
+  loop_points={clock.get_beat_sec()*1,clock.get_beat_sec()*(beat_num+4)}
   window={0,clock.get_beat_sec()*beat_num*2}
 
   -- start runner
@@ -178,7 +178,7 @@ function enc(k,d)
       for i=1,2 do
         softcut.render_buffer(i,window[1],window[2]-window[1],128)
       end
-    elseif k==3 and not recording then
+    elseif k==3 then
       loop_points[1]=util.clamp(loop_points[1]+d/100*(window[2]-window[1]),0,120)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
       if not recording then
