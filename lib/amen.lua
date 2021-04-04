@@ -145,7 +145,7 @@ function Amen:setup_parameters()
           engine.amenrate(i,1,0)
           self.lattice:hard_restart()
         else
-          engine.amenjump(i,0)
+          self:loop(i,params:get(i.."amen_loopstart"))
           engine.amenrate(i,0,1/30)
         end
       end
@@ -244,7 +244,6 @@ function Amen:setup_parameters()
           self:effect_loop(i,s,e)
           self.voice[i].disable_reset=true
         else
-          self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
           self.voice[i].hard_reset=true
           self.voice[i].disable_reset=false
         end
@@ -269,7 +268,6 @@ function Amen:setup_parameters()
           print("stutter",s,e)
           self:effect_loop(i,s,e)
         else
-          self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"),0,self.current_sc_pos)
           self.voice[i].hard_reset=true
         end
       end
@@ -286,8 +284,10 @@ function Amen:setup_parameters()
       id=i..'amen_jump',
       behavior='trigger',
       action=function(v)
-        print(i.."amen_jump "..v)
-        self:effect_jump(i,math.random(1,16)/16)
+        if v==1 then
+          print(i.."amen_jump "..v)
+          self:effect_jump(i,math.random(1,16)/16)
+        end
       end
     }
     params:add {
@@ -328,6 +328,7 @@ function Amen:setup_parameters()
           self:effect_tapestop(i,false)
         else
           self.voice[i].disable_reset=false
+          self.voice[i].hard_reset=true
           self:effect_tapestop(i,true)
         end
       end
@@ -350,6 +351,7 @@ function Amen:setup_parameters()
           self:effect_scratch(i,math.random(30,60)/10)
         else
           self.voice[i].disable_reset=false
+          self.voice[i].hard_reset=true
           self:effect_scratch(i,0)
         end
       end
@@ -403,22 +405,27 @@ function Amen:setup_parameters()
   end
 end
 
+function Amen:loop(i,pos,s,e)
+  engine.amenloop(i,pos,s or params:get(i.."amen_loopstart"),e or params:get(i.."amen_loopend"))
+  clock.run(function()
+    clock.sleep(0.1)
+    engine.amenloopnt(i,s or params:get(i.."amen_loopstart"),s or params:get(i.."amen_loopstart"),e or params:get(i.."amen_loopend"))
+  end)
+end
+
 function Amen:emit_note(division,t)
   -- keep the sample one beat
   for i=1,2 do
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
+      print(t/32%(self.voice[i].beats*2))
+      if self.voice[i].hard_reset==true then
+        self.voice[i].hard_reset=false
+        self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
+      end
       if t/32%(self.voice[i].beats*2)==0 then
         -- reset to get back in sync
-        print("reseting")
-        if self.voice[i].hard_reset==true then
-          self.voice[i].hard_reset=false
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
-        else
-          engine.amenreset(i)
-        end
-        if self.voice[i].split then
-          engine.amenreset(i+2)
-        end
+        print("reseting: amenreset")
+        engine.amenreset(i)
       end
     end
   end
@@ -515,7 +522,8 @@ function Amen:process_queue(i,q)
       end)
     end
   elseif q[1]==TYPE_JUMP then
-    engine.amenjump(i,q[2])
+    print(i,q[2],params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+    self:loop(i,q[2])
   elseif q[1]==TYPE_RATE then
     local original_rate=self.voice[i].rate
     self.voice[i].rate=q[2]
@@ -562,7 +570,7 @@ function Amen:process_queue(i,q)
       clock.run(function()
         clock.sync(q[4])
         print("reseting loop")
-        engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+        self:loop(i,params:get(i.."amen_loopstart"))
       end)
     end
   elseif q[1]==TYPE_FILTERDOWN then
