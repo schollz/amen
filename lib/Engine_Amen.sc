@@ -21,7 +21,7 @@ Engine_Amen : CroneEngine {
         });
 
         playerSwap = Array.fill(2, {arg i;
-            -1;
+            0;
         });
 
         // two players per buffer (4 players total)
@@ -57,8 +57,8 @@ Engine_Amen : CroneEngine {
                     level:amp*Lag.kr(amp_crossfade,0.2)
                 );
 
-                if (i==0, {                    
-                    SendTrig.kr(Impulse.kr(30),i*2-1,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
+                if (i.mod(2)==0, {                    
+                    SendTrig.kr(Impulse.kr(30),amp_crossfade,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
                 },{});
 
                 Out.ar(0,snd)
@@ -67,8 +67,8 @@ Engine_Amen : CroneEngine {
 
         osfun = OSCFunc({ 
             arg msg, time; 
-            if (msg[2].neg==1, {
                 // [time, msg].postln;
+            if (msg[2]>0, {
                 NetAddr("127.0.0.1", 10111).sendMsg("poscheck",time,msg[3]);   //sendMsg works out the correct OSC message for you
             },{})
         },'/tr', context.server.addr);
@@ -98,7 +98,7 @@ Engine_Amen : CroneEngine {
                 \bufnum,sampleBuffAmen[msg[1]-1],
                 \rate,0,
                 \amp_crossfade,0,
-                \amp,0,
+                // \amp,0,
             );
         });
 
@@ -108,7 +108,7 @@ Engine_Amen : CroneEngine {
                 \amp,msg[2],
             );
             playerAmen[msg[1]+1].set(
-                \amp,0,  
+                \amp,msg[2],  
             );
         });
 
@@ -138,17 +138,20 @@ Engine_Amen : CroneEngine {
 
         this.addCommand("amenloop","ifff", { arg msg;
             // lua is sending 1-index
+            playerSwap[msg[1]-1]=1-playerSwap[msg[1]-1];
             playerAmen[msg[1]-1].set(
-                \t_trig,1,
+                \t_trig,playerSwap[msg[1]-1]==0,
                 \samplePos,msg[2],
                 \sampleStart,msg[3],
                 \sampleEnd,msg[4],
+                \amp_crossfade,playerSwap[msg[1]-1]==0,
             );
             playerAmen[msg[1]+1].set(
-                \t_trig,1,
+                \t_trig,playerSwap[msg[1]-1]==1,
                 \samplePos,msg[2],
                 \sampleStart,msg[3],
                 \sampleEnd,msg[4],
+                \amp_crossfade,playerSwap[msg[1]-1]==1,
             );
         });
 
@@ -174,6 +177,13 @@ Engine_Amen : CroneEngine {
             );
             playerAmen[msg[1]+1].set(
                 \t_trig,1,
+            );
+        });
+
+        this.addCommand("amenreset1","if", { arg msg;
+            // lua is sending 1-index
+            playerAmen[msg[1]-1].set(
+                \t_trig,msg[2]>0,
             );
         });
 

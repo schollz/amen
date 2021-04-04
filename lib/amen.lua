@@ -128,6 +128,7 @@ function Amen:setup_parameters()
       self.voice[i].samples=samples
       self.voice[i].beats=math.floor(util.round(self.voice[i].duration/(60/self.voice[i].bpm)))
       self.voice[i].sample=fname
+      self.voice[i].load_flag=true
       print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
       engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
       engine.amenload(i,fname)
@@ -418,6 +419,7 @@ function Amen:emit_note(division,t)
   for i=1,2 do
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       print(t/32%(self.voice[i].beats*2))
+      -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
         self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
