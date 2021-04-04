@@ -109,8 +109,8 @@ function recording_start()
   end
   print("recording_start")
   recording=true
-  local s = math.min(window[1],loop_points[1])
-  local e = math.max(window[2],loop_points[2])
+  local s=math.min(window[1],loop_points[1])
+  local e=math.max(window[2],loop_points[2])
   print("recording between",s,e)
   for i=1,2 do
     softcut.position(i,s)
@@ -451,8 +451,8 @@ function box_text(x,y,s,invert)
     screen.level(15)
   end
   w=screen.text_extents(s)+7
-  if s=="start" then 
-    w = w + 1
+  if s=="start" then
+    w=w+1
   end
   screen.rect(x-w/2,y,w,10)
   screen.fill()
@@ -463,7 +463,7 @@ function box_text(x,y,s,invert)
   screen.rect(x-w/2,y,w,10)
   screen.stroke()
   screen.move(x,y+6)
-  screen.text_center(s)  
+  screen.text_center(s)
 end
 
 function metro_icon(x,y)
