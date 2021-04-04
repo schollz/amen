@@ -82,7 +82,7 @@ function init()
     waveform_samples[ch]=s
   end)
   softcut.event_phase(function(i,x)
-    -- print(i,x)
+    print(i,x)
     current_pos[i]=x
   end)
   softcut.poll_start_phase()
@@ -109,10 +109,13 @@ function recording_start()
   end
   print("recording_start")
   recording=true
+  local s = math.min(window[1],loop_points[1])
+  local e = math.max(window[2],loop_points[2])
+  print("recording between",s,e)
   for i=1,2 do
-    softcut.position(i,window[1])
-    softcut.loop_start(i,window[1])
-    softcut.loop_end(i,window[2]) -- TODO: calculate based on bpm
+    softcut.position(i,s)
+    softcut.loop_start(i,s)
+    softcut.loop_end(i,e) -- TODO: calculate based on bpm
     softcut.rec_level(i,1)
     softcut.rec(i,1)
     softcut.play(i,0)
@@ -128,7 +131,7 @@ function recording_stop()
   recording=false
   recorded=true
   for i=1,2 do
-    softcut.position(i,window[1])
+    softcut.position(i,math.min(window[1],loop_points[1]))
     softcut.rec_level(i,0)
     softcut.rec(i,0)
     softcut.play(i,0)
@@ -266,6 +269,7 @@ function key(k,z)
       elseif sel=="loop" then
         params:set("1amen_loop",z)
       elseif sel=="start" and z==1 then
+        params:set("1amen_play",0)
         params:set("1amen_play",1)
       elseif sel=="stop" and z==1 then
         params:set("1amen_play",0)
@@ -315,6 +319,7 @@ function runner_f(c) -- our grid redraw clock
   if breaker_update then
     breaker_update=false
     if breaker then
+      breaker_select=1
       -- zoom in
       print("loading breaker with loop points")
       tab.print(loop_points)
@@ -364,31 +369,16 @@ end
 function redraw()
   screen.clear()
   screen.level(15)
-  screen.move(2,8)
+  metro_icon(-2,3)
+  screen.move(12,8)
   if breaker then
-    screen.text("breaker")
-    screen.move(58,8)
-    if key2on then
-      screen.level(15)
-    else
-      screen.level(6)
-    end
-    screen.text_center("["..breaker_options[breaker_select][1].."]")
-    screen.move(103,8)
-    if key3on then
-      screen.level(15)
-    else
-      screen.level(6)
-    end
-    screen.text_center("["..breaker_options[breaker_select][2].."]")
+    screen.text(amen.voice[1].beats.." beats")
+    box_text(69,1,breaker_options[breaker_select][1],key2on)
+    box_text(110,1,breaker_options[breaker_select][2],key3on)
   else
-    if playing then
-      screen.text("maker "..beat_num.." beat @ "..clock.get_tempo().."  [play]")
-    elseif recording then
-      screen.text("maker "..beat_num.." beat @ "..clock.get_tempo().."  [rec]")
-    else
-      screen.text("maker "..beat_num.." beat @ "..clock.get_tempo().."  ")
-    end
+    screen.text(math.floor(clock.get_tempo()).."/"..beat_num.." beats")
+    box_text(80,1,"rec",recording)
+    box_text(105,1,"play",playing)
   end
 
   waveform_height=40
@@ -433,7 +423,7 @@ function redraw()
   if not breaker then
     for i=1,2 do
       screen.level(15)
-      screen.move(lp[i],10)
+      screen.move(lp[i],12)
       screen.line_rel(0,80)
       screen.stroke()
     end
@@ -454,6 +444,39 @@ function redraw()
   end
   screen.update()
 end
+
+function box_text(x,y,s,invert)
+  screen.level(0)
+  if invert==true then
+    screen.level(15)
+  end
+  w=screen.text_extents(s)+7
+  if s=="start" then 
+    w = w + 1
+  end
+  screen.rect(x-w/2,y,w,10)
+  screen.fill()
+  screen.level(5)
+  if invert==true then
+    screen.level(0)
+  end
+  screen.rect(x-w/2,y,w,10)
+  screen.stroke()
+  screen.move(x,y+6)
+  screen.text_center(s)  
+end
+
+function metro_icon(x,y)
+  screen.move(x+2,y+5)
+  screen.line(x+7,y)
+  screen.line(x+12,y+5)
+  screen.line(x+3,y+5)
+  screen.stroke()
+  screen.move(x+7,y+3)
+  screen.line(amen.metronome_tick and (x+4) or (x+10),y)
+  screen.stroke()
+end
+
 
 function sign(x)
   if x>0 then

@@ -37,6 +37,7 @@ function Amen:new(args)
   l:setup_parameters()
 
   -- setup lattice
+  l.metronome_tick=false
   l.bpm_current=0
   l.pulse=0
   l.lattice=lattice:new({
@@ -52,6 +53,12 @@ function Amen:new(args)
       end,
     division=1/(division/2)}
   end
+  l.lattice:new_pattern{
+    action=function(t)
+      l.metronome_tick=not l.metronome_tick
+    end,
+    division=1/4
+  }
   l.lattice:start()
 
   -- osc input
@@ -135,10 +142,11 @@ function Amen:setup_parameters()
       action=function(v)
         print("amen_play "..v)
         if v==1 then
-          self:effect_rate(i,1)
+          engine.amenrate(i,1,0)
           amen.lattice:hard_restart()
         else
-          self:effect_rate(i,0)
+          engine.amenjump(i,0)
+          engine.amenrate(i,0,1/30)
         end
       end
     }
