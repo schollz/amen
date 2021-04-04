@@ -236,6 +236,7 @@ function Amen:setup_parameters()
           self:effect_loop(i,s,e)
         else
           self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+          self.voice[i].hard_reset=true
         end
       end
     }
@@ -440,7 +441,7 @@ function Amen:emit_note(division,t)
       if params:get(i.."amen_loop_prob")/100/8>math.random() then
         params:set(i.."amen_loop",1)
         clock.run(function()
-          clock.sleep(math.random(1,50)/10)
+          clock.sleep(math.random(50,400)/100)
           params:set(i.."amen_loop",0)
         end)
       end
@@ -451,7 +452,7 @@ function Amen:emit_note(division,t)
       if params:get(i.."amen_lpf_prob")/100/8>math.random() then
         params:set(i.."amen_lpf_effect",1)
         clock.run(function()
-          clock.sleep(math.random(0,30)/10)
+          clock.sleep(math.random(100,200)/100)
           params:set(i.."amen_lpf_effect",0)
         end)
       end
