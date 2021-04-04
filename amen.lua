@@ -100,7 +100,7 @@ function init()
 
   -- debug
   -- params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
-  params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
+  -- params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
 end
 
 function recording_start()
@@ -184,13 +184,13 @@ function zoom_jog(jog)
       softcut.loop_end(i,loop_points[2])
     end
   end
-  if loop_points[2]>window[2] then
-    window[1]=window[1]+(loop_points[2]-window[2])
-    window[2]=loop_points[2]
-    for i=1,2 do
-      softcut.render_buffer(i,window[1],window[2]-window[1],128)
-    end
-  end
+  -- if loop_points[2]>window[2] then
+  --   window[1]=window[1]+(loop_points[2]-window[2])
+  --   window[2]=loop_points[2]
+  --   for i=1,2 do
+  --     softcut.render_buffer(i,window[1],window[2]-window[1],128)
+  --   end
+  -- end
   if loop_points[1]<window[1] then
     window[2]=window[2]+(loop_points[1]-window[1])
     window[1]=loop_points[1]
@@ -202,13 +202,13 @@ end
 
 function enc(k,d)
   if not breaker then
-    if k==2 then
+    if k==1 then
       local zoom=0.75
       if d<0 then
         zoom=1.5
       end
       zoom_inout(zoom)
-    elseif k==3 then
+    elseif k==2 then
       zoom_jog(d)
     else
       beat_num=util.clamp(beat_num+sign(d),1,64)
@@ -316,6 +316,8 @@ function runner_f(c) -- our grid redraw clock
     breaker_update=false
     if breaker then
       -- zoom in
+      print("loading breaker with loop points")
+      tab.print(loop_points)
       window[1]=loop_points[1]
       window[2]=loop_points[2]
       if playing then
@@ -330,20 +332,25 @@ function runner_f(c) -- our grid redraw clock
       else
         loop_name=amen.voice[1].sample
       end
-      if loop_name~="" then
-        params:set("1amen_file",loop_name)
-        softcut.buffer_clear()
-        softcut.buffer_read_stereo(loop_name,0,0,-1)
-        beat_num=amen.voice[1].beats
-        local duration=amen.voice[1].samples/48000
-        window={0,duration}
-        loop_points={0,duration}
-      end
-      for i=1,2 do
-        softcut.render_buffer(i,window[1],window[2]-window[1],128)
-      end
-      engine.amenamp(1,params:get("1amen_amp"))
-      recorded=false
+      pathname,filename,ext=string.match(loop_name,"(.-)([^\\/]-%.?([^%.\\/]*))$")
+      print_message(filename)
+      clock.run(function()
+        clock.sleep(1)
+        if loop_name~="" then
+          params:set("1amen_file",loop_name)
+          softcut.buffer_clear()
+          softcut.buffer_read_stereo(loop_name,0,0,-1)
+          beat_num=amen.voice[1].beats
+          local duration=amen.voice[1].samples/48000
+          window={0,duration}
+          loop_points={0,duration}
+        end
+        for i=1,2 do
+          softcut.render_buffer(i,window[1],window[2]-window[1],128)
+        end
+        engine.amenamp(1,params:get("1amen_amp"))
+        recorded=false
+      end)
     else
       if amen.voice[1].sample~="" then
         params:set("clock_tempo",amen.voice[1].bpm)
@@ -431,11 +438,6 @@ function redraw()
       screen.stroke()
     end
   end
-
-  if breaker then
-
-  end
-
 
   if show_message~=nil then
     screen.level(0)

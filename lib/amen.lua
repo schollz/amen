@@ -234,9 +234,11 @@ function Amen:setup_parameters()
           local s=self.current_sc_pos-clock.get_beat_sec()/self.voice[i].duration
           local e=s+clock.get_beat_sec()/self.voice[i].duration
           self:effect_loop(i,s,e)
+          self.voice[i].disable_reset=true
         else
           self:effect_loop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
           self.voice[i].hard_reset=true
+          self.voice[i].disable_reset=false
         end
       end
     }
