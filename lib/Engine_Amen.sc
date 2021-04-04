@@ -3,7 +3,7 @@
 // Inherit methods from CroneEngine
 Engine_Amen : CroneEngine {
 
-    // Amen specific
+    // Amen specific v0.0.1
     var sampleBuffAmen;
     var playerAmen;
     var osfun;
@@ -14,7 +14,7 @@ Engine_Amen : CroneEngine {
     }
 
     alloc {
-        // Amen specific
+        // Amen specific v0.0.1
         sampleBuffAmen = Array.fill(2, { arg i; 
             Buffer.new(context.server);
         });
@@ -200,7 +200,7 @@ Engine_Amen : CroneEngine {
     }
 
     free {
-        // Amen Specific
+        // Amen Specific v0.0.1
         (0..2).do({arg i; sampleBuffAmen[i].free});
         (0..5).do({arg i; playerAmen[i].free});
         osfun.free;

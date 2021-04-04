@@ -143,7 +143,7 @@ function Amen:setup_parameters()
         print("amen_play "..v)
         if v==1 then
           engine.amenrate(i,1,0)
-          amen.lattice:hard_restart()
+          self.lattice:hard_restart()
         else
           engine.amenjump(i,0)
           engine.amenrate(i,0,1/30)
