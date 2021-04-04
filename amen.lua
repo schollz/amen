@@ -82,7 +82,7 @@ function init()
     waveform_samples[ch]=s
   end)
   softcut.event_phase(function(i,x)
-    print(i,x)
+    -- print(i,x)
     current_pos[i]=x
   end)
   softcut.poll_start_phase()
