@@ -157,7 +157,7 @@ function recording_start()
   for i=1,2 do
     softcut.position(i,s)
     softcut.loop_start(i,s)
-    softcut.loop_end(i,e) -- TODO: calculate based on bpm
+    softcut.loop_end(i,e) 
     softcut.rec_level(i,1)
     softcut.rec(i,1)
     softcut.play(i,0)
