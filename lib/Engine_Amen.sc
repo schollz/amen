@@ -55,8 +55,7 @@ Engine_Amen : CroneEngine {
                 rate = rate * bpm_target / bpm_sample;
                 // scratch effect
                 rate = (scratch<1*rate) + (scratch>0*LFTri.kr(scratch));
-                // viny warble
-                rate = rate + (vinyl*VarLag.kr(LFNoise0.kr(1).range(-0.05,0.05),1,warp:\sine));
+
                 pos = Phasor.ar(
                     trig:t_trig,
                     rate:BufRateScale.kr(bufnum)*rate,
