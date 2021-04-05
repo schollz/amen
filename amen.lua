@@ -54,6 +54,13 @@ break_option_params={
   bitcrush="1amen_bitcrush",
   vinyl="1amen_vinyl",
   strobe="1amen_strobe",
+  scratch="1amen_scratch",
+  loop="1amen_loop",
+  reverse="1amen_reverse",
+  jump="1amen_jump",
+  slow="1amen_slow",
+  lpf="1amen_lpf_effect",
+  stutter="1amen_stutter",
 }
 -- WAVEFORMS
 waveform_samples={{}}
