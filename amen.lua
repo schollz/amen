@@ -125,7 +125,10 @@ function init()
   runner.event=runner_f
   runner:start()
 
-  -- debug
+  -- TODO:
+  -- first time: move the default amenbreak to the audio/amen folder and set as default
+
+  -- TODO: load last used file
   params:set("1amen_file",_path.code.."amen/samples/amenbreak_bpm136.wav")
   -- params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
   -- engine.amenvinyl(4)
@@ -598,15 +601,22 @@ function list_files(d,recurisve)
   return _list_files(d,{},recursive)
 end
 
-function save_loop()
+function ls_loop_files()
   local current_max=0
+  local num_files=0
   for _,fname in ipairs(list_files(_path.audio.."amen")) do
+    num_files=num_files+1
     local loop_num=tonumber(string.match(fname,'loop(%d*)'))
     if loop_num>current_max then
       current_max=loop_num
     end
   end
   current_max=current_max+1
+  return current_max,num_files
+end
+
+function save_loop()
+  current_max,num_files=ls_loop_files()
   fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
   print("saving loop between points "..loop_points[1].." and "..loop_points[2])
   softcut.buffer_write_stereo(_path.audio.."amen/"..fname,loop_points[1],loop_points[2]-loop_points[1])
