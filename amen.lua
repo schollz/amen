@@ -99,8 +99,9 @@ function init()
   runner:start()
 
   -- debug
-  -- params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
+  params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
   -- params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
+  -- engine.amenvinyl(4)
 end
 
 function recording_start()

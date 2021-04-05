@@ -10,6 +10,7 @@ local TYPE_SPLIT=5
 local TYPE_LOOP=6
 local TYPE_FILTERDOWN=7
 local TYPE_STROBE=8
+local TYPE_VINYL=9
 
 function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
@@ -117,7 +118,7 @@ end
 
 function Amen:setup_parameters()
   -- add parameters
-  params:add_group("AMEN",25*2)
+  params:add_group("AMEN",27*2)
   for i=1,2 do
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
@@ -419,6 +420,26 @@ function Amen:setup_parameters()
       id=i..'amen_strobe_prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
+    params:add{
+      type='binary',
+      name="vinyl",
+      id=i..'amen_vinyl',
+      behavior='toggle',
+      action=function(v)
+        print("amen_vinyl "..v)
+        if v==1 then
+          self:effect_vinyl(i,1)
+        else
+          self:effect_vinyl(i,0)
+        end
+      end
+    }
+    params:add {
+      type='control',
+      name='vinyl prob',
+      id=i..'amen_vinyl_prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
   end
 end
 
@@ -595,6 +616,18 @@ function Amen:process_queue(i,q)
     engine.amenlpf(i,q[2],2)
   elseif q[1]==TYPE_STROBE then
     engine.amenstrobe(i,q[2])
+  elseif q[1]==TYPE_VINYL then
+    print("TYPE_VINYL "..q[2])
+    engine.amenvinyl(i,q[2])
+    if q[2]==1 then
+      engine.amenlpf(i,6000,2)
+      engine.amenhpf(i,600)
+      engine.amenamp(i,0.5*params:get(i.."amen_amp"))
+    else
+      engine.amenlpf(i,params:get(i.."amen_lpf"),2)
+      engine.amenhpf(i,params:get(i.."amen_hpf"))
+      engine.amenamp(i,params:get(i.."amen_amp"))
+    end
   end
 end
 
@@ -632,6 +665,10 @@ end
 
 function Amen:effect_strobe(i,v)
   table.insert(self.voice[i].queue,{TYPE_STROBE,v})
+end
+
+function Amen:effect_vinyl(i,v)
+  table.insert(self.voice[i].queue,{TYPE_VINYL,v})
 end
 
 

@@ -6,6 +6,8 @@ Engine_Amen : CroneEngine {
     // Amen specific v0.0.1
     var sampleBuffAmen;
     var playerAmen;
+    var playerVinyl; 
+    var sampleVinyl;
     var playerSwap;
     var osfun;
     // Amen ^
@@ -20,9 +22,22 @@ Engine_Amen : CroneEngine {
             Buffer.new(context.server);
         });
 
+        sampleVinyl = Buffer.read(context.server, "/home/we/dust/code/amen/samples/vinyl2.wav"); 
+
         playerSwap = Array.fill(2, {arg i;
             0;
         });
+
+        SynthDef("vinylSound",{
+            | bufnum = 0,amp=0,hpf=800,lpf=4000|
+            var snd;
+            amp = Lag.kr(amp,2);
+            amp = amp * VarLag.kr(LFNoise0.kr(1).range(0.1,1),2,warp:\sine);
+            snd = amp * PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum)* VarLag.kr(LFNoise0.kr(1).range(0.5,1.0),2,warp:\sine),loop:1);
+            snd = HPF.ar(snd,hpf);
+            snd = LPF.ar(snd,lpf);
+            Out.ar(0,snd);
+        }).add;
 
         // two players per buffer (4 players total)
         (0..5).do({arg i; 
@@ -30,7 +45,7 @@ Engine_Amen : CroneEngine {
                 arg bufnum, amp=0, t_trig=0, amp_crossfade=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
-                scratch=0,strobe=0,
+                scratch=0,strobe=0,vinyl=0,
                 pan=0,lpf=20000,lpflag=0,hpf=10;
     
                 // vars
@@ -38,6 +53,8 @@ Engine_Amen : CroneEngine {
                 rate = Lag.kr(rate,rateSlew);
                 rate = ((scratch>0)*LFTri.kr(scratch)+(scratch<1)*rate);
                 rate = rate * bpm_target / bpm_sample;
+                // viny warble
+                rate = rate + (vinyl*VarLag.kr(LFNoise0.kr(1).range(-0.05,0.05),1,warp:\sine));
                 pos = Phasor.ar(
                     trig:t_trig,
                     rate:BufRateScale.kr(bufnum)*rate,
@@ -76,6 +93,8 @@ Engine_Amen : CroneEngine {
         playerAmen = Array.fill(4,{arg i;
             Synth("playerAmen"++i, target:context.xg);
         });
+
+        playerVinyl = Synth("vinylSound",target:context.xg);
 
         this.addCommand("amenrelease","", { arg msg;
             (0..2).do({arg i; 
@@ -252,6 +271,20 @@ Engine_Amen : CroneEngine {
             );
         });
 
+        this.addCommand("amenvinyl","if", { arg msg;
+            // lua is sending 1-index
+            playerAmen[msg[1]-1].set(
+                \vinyl,msg[2],
+            );
+            playerAmen[msg[1]+1].set(
+                \vinyl,msg[2],
+            );
+            playerVinyl.set(
+                \bufnum,sampleVinyl,
+                \amp,msg[2],
+            );
+        });
+
         // ^ Amen specific
 
     }
@@ -262,6 +295,8 @@ Engine_Amen : CroneEngine {
         (0..5).do({arg i; playerAmen[i].free});
         osfun.free;
         (0..2).do({arg i; playerSwap[i].free});
+        playerVinyl.free;
+        sampleVinyl.free;
         // ^ Amen specific
     }
 }
