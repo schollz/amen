@@ -241,6 +241,9 @@ function enc(k,d)
       zoom_inout(zoom)
     elseif k==2 then
       zoom_jog(d)
+      if amen.voice[1].sample~="" then
+        changed=true
+      end
     else
       beat_num=util.clamp(beat_num+sign(d),1,64)
       loop_points[2]=loop_points[1]+clock.get_beat_sec()*beat_num
@@ -366,6 +369,8 @@ function runner_f(c) -- our grid redraw clock
       if recorded or changed then
         print("recorded or changed")
         loop_name=save_loop()
+        changed=false
+        recorded=false
       else
         loop_name=amen.voice[1].sample
       end
@@ -603,6 +608,7 @@ function save_loop()
   end
   current_max=current_max+1
   fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
+  print("saving loop between points "..loop_points[1].." and "..loop_points[2])
   softcut.buffer_write_stereo(_path.audio.."amen/"..fname,loop_points[1],loop_points[2]-loop_points[1])
   return _path.audio.."amen/"..fname
 end
