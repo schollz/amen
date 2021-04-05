@@ -1,6 +1,27 @@
 -- amen v0.0.1
--- get that amen break.
+-- make and break loops
 --
+-- llllllll.co/t/amen
+--
+--
+--
+--    ▼ instructions below ▼
+--
+-- MAKER MODE:
+-- k1 switches to breaker mode
+-- k2 starts/stops recording
+-- k3 starts/stops playback
+-- e1 zooms into loop start
+-- e2 jogs loop window
+-- e3 changes loop length
+-- 
+-- BREAKER MODE:
+-- k1 switches to maker mode
+-- k2 activates left effect
+-- k3 activates right effect
+-- e1 switches effects
+-- e2 changes start (unquantized)
+-- e3 changes end (quantized)
 
 amenbreaks=include("amen/lib/amen")
 
