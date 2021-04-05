@@ -17,6 +17,8 @@ there are two different modes - a "*maker*" mode for making loops and a "*breake
 
 maker mode is indicated by the "rec" and "play" buttons.
 
+in this mode you can sample new loops or edit the start/end points of a current loop.
+
 ![breaker](https://user-images.githubusercontent.com/6550035/113587030-1bb69f00-95e3-11eb-92e7-37520fdd24c0.png)
 
 - k1 switches to *breaker mode* 
@@ -31,6 +33,8 @@ _note:_ you can also enter *breaker mode* by loading a file via the parameters (
 ### breaker mode
 
 breaker mode is indicated by the "stop" and "start" buttons.
+
+in this mode you can playback the current loop with all sorts of punch-in effects. in the parameters menu you can also adjust probabilities of the effects for automatically activating.
 
 ![breaker](https://user-images.githubusercontent.com/6550035/113587036-1c4f3580-95e3-11eb-8772-ab1ab995ed5e.png)
 
