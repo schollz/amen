@@ -45,6 +45,7 @@ Engine_Amen : CroneEngine {
                 arg bufnum, amp=0, t_trig=0, amp_crossfade=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
+                bitcrush=0,bitcrush_bits=24,bitcrush_rate=44100,
                 scratch=0,strobe=0,vinyl=0,
                 pan=0,lpf=20000,lpflag=0,hpf=10;
     
@@ -68,7 +69,13 @@ Engine_Amen : CroneEngine {
                 );
                 snd = LPF.ar(snd,Lag.kr(lpf,lpflag));
                 snd = HPF.ar(snd,hpf);
+                // strobe
                 snd = ((strobe<1)*snd)+((strobe>0)*snd*LFPulse.ar(60/bpm_target*16));
+                // bitcrush
+                bitcrush = VarLag.kr(bitcrush,1,warp:\cubed);
+                snd = (snd*(1-bitcrush))+(bitcrush*Decimator.ar(snd,VarLag.kr(bitcrush_rate,1,warp:\cubed),VarLag.kr(bitcrush_bits,1,warp:\cubed)));
+                
+                // manual panning
                 snd = Balance2.ar(snd[0],snd[1],
                     pan+SinOsc.kr(60/bpm_target*16,mul:strobe*0.5),
                     level:amp*Lag.kr(amp_crossfade,0.2)
@@ -284,6 +291,23 @@ Engine_Amen : CroneEngine {
                 \amp,msg[2],
             );
         });
+
+        
+        this.addCommand("amenbitcrush","ifff", { arg msg;
+            // lua is sending 1-index
+            playerAmen[msg[1]-1].set(
+                \bitcrush,msg[2],
+                \bitcrush_bits,msg[3],
+                \bitcrush_rate,msg[4],
+            );
+            playerAmen[msg[1]+1].set(
+                \bitcrush,msg[2],
+                \bitcrush_bits,msg[3],
+                \bitcrush_rate,msg[4],
+            );
+        });
+
+
 
         // ^ Amen specific
 

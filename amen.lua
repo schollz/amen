@@ -27,6 +27,12 @@ breaker_options={
   {"reverse","jump"},
   {"slow","lpf"},
   {"stutter","strobe"},
+  {"bitcrush","vinyl"},
+}
+break_option_params={
+  bitcrush="1amen_bitcrush",
+  vinyl="1amen_vinyl",
+  strobe="1amen_strobe",
 }
 -- WAVEFORMS
 waveform_samples={{}}
@@ -278,8 +284,12 @@ function key(k,z)
         params:set("1amen_lpf_effect",z)
       elseif sel=="stutter" then
         params:set("1amen_stutter",z)
-      elseif sel=="strobe" then
-        params:set("1amen_strobe",z)
+      elseif sel=="strobe" and z==1 then
+        params:delta("1amen_strobe",1)
+      elseif sel=="bitcrush" and z==1 then
+        params:delta("1amen_bitcrush",1)
+      elseif sel=="vinyl" and z==1 then
+        params:delta("1amen_vinyl",1)
       end
     end
   else
@@ -380,8 +390,16 @@ function redraw()
   screen.move(12,8)
   if breaker then
     screen.text(amen.voice[1].beats.." beats")
-    box_text(69,1,breaker_options[breaker_select][1],key2on)
-    box_text(110,1,breaker_options[breaker_select][2],key3on)
+    local keyon = key2on
+    if break_option_params[breaker_options[breaker_select][1]] ~= nil then
+      keyon = params:get(break_option_params[breaker_options[breaker_select][1]])==1
+    end
+    box_text(69,1,breaker_options[breaker_select][1],keyon)
+    keyon = key3on
+    if break_option_params[breaker_options[breaker_select][2]] ~= nil then
+      keyon = params:get(break_option_params[breaker_options[breaker_select][2]])==1
+    end
+    box_text(110,1,breaker_options[breaker_select][2],keyon)
   else
     screen.text(math.floor(clock.get_tempo()).."/"..beat_num.." beats")
     box_text(80,1,"rec",recording)

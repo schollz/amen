@@ -118,7 +118,7 @@ end
 
 function Amen:setup_parameters()
   -- add parameters
-  params:add_group("AMEN",27*2)
+  params:add_group("AMEN",29*2)
   for i=1,2 do
     params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
@@ -404,7 +404,7 @@ function Amen:setup_parameters()
       type='binary',
       name="strobe",
       id=i..'amen_strobe',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print("amen_reverse "..v)
         if v==1 then
@@ -438,6 +438,26 @@ function Amen:setup_parameters()
       type='control',
       name='vinyl prob',
       id=i..'amen_vinyl_prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
+    params:add{
+      type='binary',
+      name="bitcrush",
+      id=i..'amen_bitcrush',
+      behavior='toggle',
+      action=function(v)
+        print("amen_bitcrush "..v)
+        if v==1 then
+          self:effect_bitcrush(i,1)
+        else
+          self:effect_bitcrush(i,0)
+        end
+      end
+    }
+    params:add {
+      type='control',
+      name='bitcrush prob',
+      id=i..'amen_bitcrush_prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
   end
@@ -628,6 +648,13 @@ function Amen:process_queue(i,q)
       engine.amenhpf(i,params:get(i.."amen_hpf"))
       engine.amenamp(i,params:get(i.."amen_amp"))
     end
+  elseif q[1]==TYPE_BITCRUSH then
+    print("TYPE_BITCRUSH "..q[2])
+    if q[2]==1 then
+      engine.amenbitcrush(i,1,12,1500)
+    else
+      engine.amenbitcrush(i,0,24,20000)
+    end
   end
 end
 
@@ -669,6 +696,10 @@ end
 
 function Amen:effect_vinyl(i,v)
   table.insert(self.voice[i].queue,{TYPE_VINYL,v})
+end
+
+function Amen:effect_bitcrush(i,v)
+  table.insert(self.voice[i].queue,{TYPE_BITCRUSH,v})
 end
 
 
