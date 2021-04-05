@@ -390,14 +390,14 @@ function redraw()
   screen.move(12,8)
   if breaker then
     screen.text(amen.voice[1].beats.." beats")
-    local keyon = key2on
-    if break_option_params[breaker_options[breaker_select][1]] ~= nil then
-      keyon = params:get(break_option_params[breaker_options[breaker_select][1]])==1
+    local keyon=key2on
+    if break_option_params[breaker_options[breaker_select][1]]~=nil then
+      keyon=params:get(break_option_params[breaker_options[breaker_select][1]])==1
     end
     box_text(69,1,breaker_options[breaker_select][1],keyon)
-    keyon = key3on
-    if break_option_params[breaker_options[breaker_select][2]] ~= nil then
-      keyon = params:get(break_option_params[breaker_options[breaker_select][2]])==1
+    keyon=key3on
+    if break_option_params[breaker_options[breaker_select][2]]~=nil then
+      keyon=params:get(break_option_params[breaker_options[breaker_select][2]])==1
     end
     box_text(110,1,breaker_options[breaker_select][2],keyon)
   else
