@@ -85,10 +85,13 @@ Engine_Amen : CroneEngine {
             });
         });
 
-        this.addCommand("amenload","is", { arg msg;
+        this.addCommand("amenload","isi", { arg msg;
             // lua is sending 1-index
             sampleBuffAmen[msg[1]-1].free;
-            sampleBuffAmen[msg[1]-1] = Buffer.read(context.server,msg[2]);
+            postln("loading "++msg[3]++" samples of "++msg[2]);
+            sampleBuffAmen[msg[1]-1] = Buffer.read(context.server,msg[2],
+                numFrames:msg[3]
+            );
             playerAmen[msg[1]-1].set(
                 \bufnum,sampleBuffAmen[msg[1]-1],
                 \rate,0,

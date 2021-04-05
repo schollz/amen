@@ -99,7 +99,7 @@ function init()
   runner:start()
 
   -- debug
-  -- params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
+  params:set("1amen_file",_path.audio.."kolor/bank12/loop_break2_bpm170.wav")
   -- params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
 end
 
@@ -356,15 +356,18 @@ function runner_f(c) -- our grid redraw clock
   if amen.voice[1].load_flag then
     amen.voice[1].load_flag=false
     softcut.buffer_clear()
-    softcut.buffer_read_stereo(amen.voice[1].sample,0,0,-1)
+    softcut.buffer_read_stereo(amen.voice[1].sample,0,0,amen.voice[1].duration_loaded)
     beat_num=amen.voice[1].beats
-    local duration=amen.voice[1].samples/48000
+    local duration=amen.voice[1].samples_loaded/48000
     window={0,duration}
     loop_points={0,duration}
     for i=1,2 do
       softcut.render_buffer(i,window[1],window[2]-window[1],128)
     end
     engine.amenamp(1,params:get("1amen_amp"))
+  end
+  if breaker and amen.voice[1].beats~=beat_num then
+    beat_num=amen.voice[1].beats
   end
   redraw()
 end

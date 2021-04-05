@@ -21,9 +21,12 @@ function Amen:new(args)
   l.voice={}
   for i=1,2 do
     l.voice[i]={
+      loop_start=0,
+      loop_end=1,
       sample="",
       bpm=60,
       beats=0,
+      beats_loaded=0,
       queue={},
       hard_reset=false,
       disable_reset=false,
@@ -126,12 +129,23 @@ function Amen:setup_parameters()
       end
       self.voice[i].duration=samples/samplerate
       self.voice[i].samples=samples
-      self.voice[i].beats=math.floor(util.round(self.voice[i].duration/(60/self.voice[i].bpm)))
+      self.voice[i].samplerate=samplerate
+      self.voice[i].beats_loaded=util.round(self.voice[i].duration/(60/self.voice[i].bpm))
+      self.voice[i].beats=self.voice[i].beats_loaded
+      self.voice[i].duration_loaded=self.voice[i].beats*(60/self.voice[i].bpm)
+      if self.voice[i].duration_loaded>self.voice[i].duration then
+        self.voice[i].duration_loaded=self.voice[i].duration_loaded
+      end
+      self.voice[i].samples_loaded=util.round(self.voice[i].samplerate*self.voice[i].duration_loaded)
+      if self.voice[i].samples_loaded>self.voice[i].samples then 
+        self.voice[i].samples_loaded=self.voice[i].samples
+      end
       self.voice[i].sample=fname
       self.voice[i].load_flag=true
+      tab.print(self.voice[i])
       print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
       engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
-      engine.amenload(i,fname)
+      engine.amenload(i,fname,self.voice[i].samples_loaded)
       engine.amenamp(i,params:get(i.."amen_amp"))
       params:set(i.."amen_play",0)
     end)
@@ -208,7 +222,7 @@ function Amen:setup_parameters()
           clock.cancel(self.debounce_loopstart)
         end
         self.debounce_loopstart=clock.run(function()
-          clock.sleep(0.5)
+          clock.sleep(0.2)
           engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
@@ -225,7 +239,9 @@ function Amen:setup_parameters()
           clock.cancel(self.debounce_loopend)
         end
         self.debounce_loopend=clock.run(function()
-          clock.sleep(0.5)
+          clock.sleep(0.2)
+          self.voice[i].beats=util.round(self.voice[i].beats_loaded*(v-params:get(i.."amen_loopstart")))
+          params:set(i.."amen_loopend",params:get(i.."amen_loopstart")+self.voice[i].beats/self.voice[i].beats_loaded,true)
           engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
@@ -240,8 +256,8 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s=self.current_sc_pos-clock.get_beat_sec()/self.voice[i].duration
-          local e=s+clock.get_beat_sec()/self.voice[i].duration
+          local s=self.current_sc_pos-clock.get_beat_sec()/self.voice[i].duration_loaded
+          local e=s+clock.get_beat_sec()/self.voice[i].duration_loaded
           self:effect_loop(i,s,e)
           self.voice[i].disable_reset=true
         else
@@ -265,7 +281,7 @@ function Amen:setup_parameters()
         print(i.."amen_stutter "..v)
         if v==1 then
           local s=self.current_sc_pos
-          local e=s+math.random(30,100)/self.voice[i].duration/1000
+          local e=s+math.random(30,100)/self.voice[i].duration_loaded/1000
           print("stutter",s,e)
           self:effect_loop(i,s,e)
         else
