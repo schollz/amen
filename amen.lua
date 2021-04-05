@@ -281,6 +281,7 @@ function enc(k,d)
     if k==1 then
       breaker_select=util.wrap(breaker_select+sign(d),1,#breaker_options)
     elseif k==2 then
+      -- TODO: update the percentage if the selected breaker has a probability
       params:delta("1amen_loopstart",d)
     elseif k==3 then
       params:delta("1amen_loopend",d)
