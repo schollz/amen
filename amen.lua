@@ -157,7 +157,7 @@ function recording_start()
   for i=1,2 do
     softcut.position(i,s)
     softcut.loop_start(i,s)
-    softcut.loop_end(i,e) 
+    softcut.loop_end(i,e)
     softcut.rec_level(i,1)
     softcut.rec(i,1)
     softcut.play(i,0)
@@ -281,12 +281,25 @@ function enc(k,d)
     if k==1 then
       breaker_select=util.wrap(breaker_select+sign(d),1,#breaker_options)
     elseif k==2 then
-      -- TODO: update the percentage if the selected breaker has a probability
-      params:delta("1amen_loopstart",d)
+      if not update_breaker(k,d) then
+        params:delta("1amen_loopstart",d)
+      end
     elseif k==3 then
-      params:delta("1amen_loopend",d)
+      if not update_breaker(k,d) then
+        params:delta("1amen_loopend",d)
+      end
     end
   end
+end
+
+function update_breaker(k,d)
+  -- update the breaker percentage
+  local sel=breaker_options[breaker_select][k-1]
+  if break_option_params[sel]==nil then
+    do return false end
+  end
+  params:delta(1..breaker_option_params[sel].."_prob",d)
+  return true
 end
 
 function key(k,z)
@@ -431,6 +444,7 @@ function redraw()
   metro_icon(-2,3)
   screen.move(12,8)
   if breaker then
+    -- TODO show the relevant probabilities as a number?
     screen.text(amen.voice[1].beats.." beats")
     local keyon=key2on
     if break_option_params[breaker_options[breaker_select][1]]~=nil then
