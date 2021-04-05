@@ -52,8 +52,9 @@ Engine_Amen : CroneEngine {
                 // vars
                 var snd,pos;
                 rate = Lag.kr(rate,rateSlew);
-                rate = ((scratch>0)*LFTri.kr(scratch)+(scratch<1)*rate);
                 rate = rate * bpm_target / bpm_sample;
+                // scratch effect
+                rate = (scratch<1*rate) + (scratch>0*LFTri.kr(scratch));
                 // viny warble
                 rate = rate + (vinyl*VarLag.kr(LFNoise0.kr(1).range(-0.05,0.05),1,warp:\sine));
                 pos = Phasor.ar(
@@ -74,6 +75,10 @@ Engine_Amen : CroneEngine {
                 // bitcrush
                 bitcrush = VarLag.kr(bitcrush,1,warp:\cubed);
                 snd = (snd*(1-bitcrush))+(bitcrush*Decimator.ar(snd,VarLag.kr(bitcrush_rate,1,warp:\cubed),VarLag.kr(bitcrush_bits,1,warp:\cubed)));
+
+                // vinyl wow + compressor
+                snd=(vinyl<1*snd)+(vinyl>0* Limiter.ar(Compander.ar(snd,snd,0.5,1.0,0.1,0.1,1,2),dur:0.0008));
+                snd =(vinyl<1*snd)+(vinyl>0* DelayC.ar(snd,0.01,VarLag.kr(LFNoise0.kr(1),1,warp:\sine).range(0,0.01)));                
                 
                 // manual panning
                 snd = Balance2.ar(snd[0],snd[1],

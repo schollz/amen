@@ -173,13 +173,7 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(0,10,'lin',0,1.0,'amp',0.01/10),
       action=function(v)
         print("amenamp "..v)
-        if self.voice[i].split then
-          engine.amenamp(i,v/2)
-          engine.amenamp(i+2,v/2)
-        else
-          engine.amenamp(i,v)
-          engine.amenamp(i+2,0)
-        end
+        engine.amenamp(i,v)
       end
     }
     params:add {
