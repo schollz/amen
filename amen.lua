@@ -39,8 +39,7 @@ last_pos=0
 loop_points={0,0}
 window={0,0}
 show_message=nil
-key2on=false
-key3on=false
+keyson={false,false}
 breaker_select=1
 breaker_options={
   {"stop","start"},
@@ -303,10 +302,8 @@ function update_breaker(k,d)
 end
 
 function key(k,z)
-  if k==2 then
-    key2on=z==1
-  elseif k==3 then
-    key3on=z==1
+  if k>1 then
+    keyson[k-1]=z==1
   end
 
   if k==1 and z==1 then
@@ -444,18 +441,19 @@ function redraw()
   metro_icon(-2,3)
   screen.move(12,8)
   if breaker then
-    -- TODO show the relevant probabilities as a number?
     screen.text(amen.voice[1].beats.." beats")
-    local keyon=key2on
-    if break_option_params[breaker_options[breaker_select][1]]~=nil then
-      keyon=params:get(break_option_params[breaker_options[breaker_select][1]])==1
+    for i=1,2 do
+      local keyon=keyson[i]
+      local p=break_option_params[breaker_options[breaker_select][i]]
+      if p~=nil then
+        keyon=params:get(p)==1
+      end
+      x,y,w=box_text(69+41*(i-1),1,breaker_options[breaker_select][i],keyon)
+      -- show prob in a line above the box
+      screen.move(x,y)
+      screen.line(x,y+w*params:get(p.."_prob")/100)
+      screen.stroke()
     end
-    box_text(69,1,breaker_options[breaker_select][1],keyon)
-    keyon=key3on
-    if break_option_params[breaker_options[breaker_select][2]]~=nil then
-      keyon=params:get(break_option_params[breaker_options[breaker_select][2]])==1
-    end
-    box_text(110,1,breaker_options[breaker_select][2],keyon)
   else
     screen.text(math.floor(clock.get_tempo()).."/"..beat_num.." beats")
     box_text(80,1,"rec",recording)
@@ -545,6 +543,7 @@ function box_text(x,y,s,invert)
   screen.stroke()
   screen.move(x,y+6)
   screen.text_center(s)
+  return x-w/2,y,w
 end
 
 function metro_icon(x,y)
