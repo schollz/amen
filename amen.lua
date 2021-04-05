@@ -14,7 +14,7 @@
 -- e1 zooms into loop start
 -- e2 jogs loop window
 -- e3 changes loop length
--- 
+--
 -- BREAKER MODE:
 -- k1 switches to maker mode
 -- k2 activates left effect
