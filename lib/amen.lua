@@ -137,7 +137,7 @@ function Amen:setup_parameters()
         self.voice[i].duration_loaded=self.voice[i].duration_loaded
       end
       self.voice[i].samples_loaded=util.round(self.voice[i].samplerate*self.voice[i].duration_loaded)
-      if self.voice[i].samples_loaded>self.voice[i].samples then 
+      if self.voice[i].samples_loaded>self.voice[i].samples then
         self.voice[i].samples_loaded=self.voice[i].samples
       end
       self.voice[i].sample=fname
