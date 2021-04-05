@@ -125,11 +125,15 @@ function init()
   runner.event=runner_f
   runner:start()
 
-  -- TODO:
   -- first time: move the default amenbreak to the audio/amen folder and set as default
+  if not util.file_exists(_path.audio.."amen/amenbreak_bpm136.wav") then
+    os.execute("mkdir -p ".._path.audio.."amen")
+    os.execute("cp ".._path.code.."amen/samples/amenbreak_bpm136.wav ".._path.audio.."amen/")
+    params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
+  else
+    default_load()
+  end
 
-  -- TODO: load last used file
-  params:set("1amen_file",_path.code.."amen/samples/amenbreak_bpm136.wav")
   -- params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
   -- engine.amenvinyl(4)
 end
@@ -383,6 +387,7 @@ function runner_f(c) -- our grid redraw clock
         clock.sleep(1)
         if loop_name~="" then
           params:set("1amen_file",loop_name)
+          default_save()
         end
         recorded=false
       end)
@@ -623,6 +628,21 @@ function save_loop()
   return _path.audio.."amen/"..fname
 end
 
+function default_load()
+  if util.file_exists(_path.data.."amen/last_file") then
+    local f=io.open(_path.data.."ameny/last_file","rb")
+    local content=f:read("*all")
+    f:close()
+    print(content)
+    if content~=nil then
+      params:set("1amen_file",content)
+    end
+  end
+end
 
-
+function default_save()
+  f=io.open(_path.data.."amen/last_file","w")
+  f:write(params:get("1amen_file"))
+  f:close()
+end
 
