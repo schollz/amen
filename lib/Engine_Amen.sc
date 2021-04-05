@@ -33,7 +33,7 @@ Engine_Amen : CroneEngine {
             var snd;
             amp = Lag.kr(amp,2);
             amp = amp * VarLag.kr(LFNoise0.kr(1).range(0.1,1),2,warp:\sine);
-            snd = amp * PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum)* VarLag.kr(LFNoise0.kr(1).range(0.5,1.0),2,warp:\sine),loop:1);
+            snd = amp * PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum),loop:1);
             snd = HPF.ar(snd,hpf);
             snd = LPF.ar(snd,lpf);
             Out.ar(0,snd);
