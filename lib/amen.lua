@@ -324,7 +324,7 @@ function Amen:setup_parameters()
     }
     params:add {
       type='control',
-      id=i..'amen_lpf_prob',
+      id=i..'amen_lpf_effect_prob',
       name='lpf prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
@@ -519,7 +519,7 @@ function Amen:emit_note(division,t)
         params:set(i.."amen_jump",1)
         params:set(i.."amen_jump",0)
       end
-      if params:get(i.."amen_lpf_prob")/100/8>math.random() then
+      if params:get(i.."amen_lpf_effect_prob")/100/8>math.random() then
         params:set(i.."amen_lpf_effect",1)
         clock.run(function()
           clock.sleep(math.random(100,200)/100)
@@ -559,6 +559,20 @@ function Amen:emit_note(division,t)
         clock.run(function()
           clock.sleep(math.random(100,500)/1000)
           params:set(i.."amen_stutter",0)
+        end)
+      end
+      if params:get(i.."amen_vinyl_prob")/100/8>math.random() then
+        params:set(i.."amen_vinyl",1)
+        clock.run(function()
+          clock.sleep(math.random(1000,5000)/1000)
+          params:set(i.."amen_vinyl",0)
+        end)
+      end
+      if params:get(i.."amen_bitcrush_prob")/100/8>math.random() then
+        params:set(i.."amen_bitcrush",1)
+        clock.run(function()
+          clock.sleep(math.random(100,3000)/1000)
+          params:set(i.."amen_bitcrush",0)
         end)
       end
     end
@@ -695,6 +709,8 @@ end
 function Amen:effect_bitcrush(i,v)
   table.insert(self.voice[i].queue,{TYPE_BITCRUSH,v})
 end
+
+
 
 
 return Amen
