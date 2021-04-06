@@ -49,7 +49,7 @@ breaker_options={
   {"stutter","strobe"},
   {"bitcrush","vinyl"},
 }
-break_option_params={
+breaker_option_params={
   bitcrush="1amen_bitcrush",
   vinyl="1amen_vinyl",
   strobe="1amen_strobe",
@@ -57,7 +57,7 @@ break_option_params={
   loop="1amen_loop",
   reverse="1amen_reverse",
   jump="1amen_jump",
-  slow="1amen_slow",
+  slow="1amen_tapestop",
   lpf="1amen_lpf_effect",
   stutter="1amen_stutter",
 }
@@ -294,10 +294,11 @@ end
 function update_breaker(k,d)
   -- update the breaker percentage
   local sel=breaker_options[breaker_select][k-1]
-  if break_option_params[sel]==nil then
+  if breaker_option_params[sel]==nil then
     do return false end
   end
-  params:delta(1..breaker_option_params[sel].."_prob",d)
+  print(sel,breaker_option_params[sel])
+  params:delta(breaker_option_params[sel].."_prob",d)
   return true
 end
 
@@ -444,15 +445,20 @@ function redraw()
     screen.text(amen.voice[1].beats.." beats")
     for i=1,2 do
       local keyon=keyson[i]
-      local p=break_option_params[breaker_options[breaker_select][i]]
+      local p=breaker_option_params[breaker_options[breaker_select][i]]
       if p~=nil then
         keyon=params:get(p)==1
       end
-      x,y,w=box_text(69+41*(i-1),1,breaker_options[breaker_select][i],keyon)
-      -- show prob in a line above the box
-      screen.move(x,y)
-      screen.line(x,y+w*params:get(p.."_prob")/100)
-      screen.stroke()
+      x,y,w=box_text(70+41*(i-1),1,breaker_options[breaker_select][i],keyon)
+      if p~=nil then
+        -- show prob in a line below the box
+        screen.move(x,y+11)
+        screen.line(x+w*params:get(p.."_prob")/100,y+11)
+        screen.stroke()
+        screen.move(x,y+12)
+        screen.line(x+w*params:get(p.."_prob")/100,y+12)
+        screen.stroke()
+      end
     end
   else
     screen.text(math.floor(clock.get_tempo()).."/"..beat_num.." beats")
@@ -543,6 +549,9 @@ function box_text(x,y,s,invert)
   screen.stroke()
   screen.move(x,y+6)
   screen.text_center(s)
+  if invert==true then 
+    screen.level(15)
+  end
   return x-w/2,y,w
 end
 
@@ -651,13 +660,15 @@ end
 
 function default_load()
   if util.file_exists(_path.data.."amen/last_file") then
-    local f=io.open(_path.data.."ameny/last_file","rb")
+    local f=io.open(_path.data.."amen/last_file","rb")
     local content=f:read("*all")
     f:close()
     print(content)
     if content~=nil then
       params:set("1amen_file",content)
     end
+  else
+    params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
   end
 end
 

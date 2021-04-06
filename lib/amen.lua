@@ -561,6 +561,20 @@ function Amen:emit_note(division,t)
           params:set(i.."amen_stutter",0)
         end)
       end
+      if params:get(i.."amen_vinyl_prob")/100/8>math.random() then
+        params:set(i.."amen_vinyl",1)
+        clock.run(function()
+          clock.sleep(math.random(1000,5000)/1000)
+          params:set(i.."amen_vinyl",0)
+        end)
+      end
+      if params:get(i.."amen_bitcrush_prob")/100/8>math.random() then
+        params:set(i.."amen_bitcrush",1)
+        clock.run(function()
+          clock.sleep(math.random(100,3000)/1000)
+          params:set(i.."amen_bitcrush",0)
+        end)
+      end
     end
   end
 end
