@@ -34,7 +34,7 @@ function Amen:new(args)
       rate=1,
       split=false,
       spin=0,
-      sc_pos={0,0},
+      sc_pos=0,
       sc_active={1},
     }
   end
@@ -70,22 +70,22 @@ function Amen:new(args)
 
   -- osc input
   osc.event=function(path,args,from)
-    -- print(args[2])
-    if path=="amp_crossfade" then
-      l.voice[args[1]].sc_active=args[2]
-    elseif path=="poscheck" then
-      if args[1]==0 then
-        l.voice[1].sc_pos[1]=args[2]
-      elseif args[1]==1 then
-        l.voice[2].sc_pos[1]=args[2]
-      elseif args[1]==2 then
-        l.voice[1].sc_pos[2]=args[2]
-      elseif args[1]==3 then
-        l.voice[2].sc_pos[2]=args[2]
-      end
-      tab.print(l.voice[1].sc_pos)
-      print(l.voice[1].sc_active)
-    end
+    l.voice[args[1]].sc_pos=args[2]
+    -- if path=="amp_crossfade" then
+    --   l.voice[args[1]].sc_active=args[2]
+    -- elseif path=="poscheck" then
+    --   if args[1]==0 then
+    --     l.voice[1].sc_pos[1]=args[2]
+    --   elseif args[1]==1 then
+    --     l.voice[2].sc_pos[1]=args[2]
+    --   elseif args[1]==2 then
+    --     l.voice[1].sc_pos[2]=args[2]
+    --   elseif args[1]==3 then
+    --     l.voice[2].sc_pos[2]=args[2]
+    --   end
+    --   tab.print(l.voice[1].sc_pos)
+    --   print(l.voice[1].sc_active)
+    -- end
   end
 
 
@@ -93,7 +93,8 @@ function Amen:new(args)
 end
 
 function Amen:current_pos(i)
-    return self.voice[i].sc_pos[self.voice[i].sc_active]
+    -- return self.voice[i].sc_pos[self.voice[i].sc_active]
+    return self.voice[i].sc_pos
 end
 
 function Amen:setup_midi()
