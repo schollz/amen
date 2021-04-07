@@ -25,23 +25,23 @@
 
 amenbreaks=include("amen/lib/amen")
 
-breaker_update=false
-loaded_in_menu=false
-changed=false
-breaker=false
-shift=false
-beat_num=4
-recording=false
-recorded=false
-playing=false
-current_pos={0,0}
-last_pos=0
-loop_points={0,0}
-window={0,0}
-show_message=nil
-keyson={false,false}
-breaker_select=1
-breaker_options={
+local breaker_update=false
+local loaded_in_menu=false
+local changed=false
+local breaker=false
+local shift=false
+local beat_num=4
+local recording=false
+local recorded=false
+local playing=false
+local current_pos={0,0}
+local last_pos=0
+local loop_points={0,0}
+local window={0,0}
+local show_message=nil
+local keyson={false,false}
+local breaker_select=1
+local breaker_options={
   {"stop","start"},
   {"scratch","loop"},
   {"reverse","jump"},
@@ -49,7 +49,7 @@ breaker_options={
   {"stutter","strobe"},
   {"bitcrush","vinyl"},
 }
-breaker_option_params={
+local breaker_option_params={
   bitcrush="1amen_bitcrush",
   vinyl="1amen_vinyl",
   strobe="1amen_strobe",
@@ -62,7 +62,7 @@ breaker_option_params={
   stutter="1amen_stutter",
 }
 -- WAVEFORMS
-waveform_samples={{}}
+local waveform_samples={{}}
 engine.name="Amen"
 
 function init()

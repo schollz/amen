@@ -36,6 +36,7 @@ function Amen:new(args)
       spin=0,
     }
   end
+  l.voice_loaded=0
 
   l:setup_midi()
   l:setup_parameters()
@@ -149,6 +150,7 @@ function Amen:setup_parameters()
       engine.amenload(i,fname,self.voice[i].samples_loaded)
       engine.amenamp(i,params:get(i.."amen_amp"))
       params:set(i.."amen_play",0)
+      self.voice_loaded=i -- trigger for loading images
     end)
     params:add{
       type='binary',
