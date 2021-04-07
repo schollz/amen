@@ -429,7 +429,7 @@ function redraw()
   metro_icon(-2,3)
   screen.move(12,8)
   if breaker then
-    screen.text(amen.voice[voice].beats.." beats")
+    screen.text(math.floor(amen.voice[voice].beat+1).."/"..amen.voice[voice].beats)
     for i=1,2 do
       local keyon=keyson[i]
       local p=breaker_option_params[breaker_options[breaker_select][i]]

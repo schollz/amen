@@ -26,6 +26,7 @@ function Amen:new(args)
       loop_end=1,
       sample="",
       bpm=60,
+      beat=0,
       beats=0,
       beats_loaded=0,
       queue={},
@@ -46,7 +47,6 @@ function Amen:new(args)
   -- setup lattice
   l.metronome_tick=false
   l.bpm_current=0
-  l.pulse=0
   l.lattice=lattice:new({
     ppqn=64
   })
@@ -507,6 +507,7 @@ function Amen:emit_note(division,t)
   for i=1,2 do
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       print(t/32%(self.voice[i].beats*2))
+      self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
