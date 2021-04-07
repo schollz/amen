@@ -138,10 +138,26 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob"}
   -- add parameters
-  params:add_group("AMEN",29*2)
+
+  params:add_group("AMEN",28*2+1)
+  params:add{type="number",id="amen_loop_num",name="loop",min=1,max=2,default=1,action=function(v)
+    for _,param_name in ipairs(self.param_names) do
+      for i=1,2 do
+        if i==v then
+          params:show(i..param_name)
+        else
+          params:hide(i..param_name)
+        end
+      end
+    end
+    _menu.rebuild_params()
+    if params:get(v.."amen_file")~="" then
+      self.voice_loaded=v
+    end
+  end}
   for i=1,2 do
-    params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
     params:set_action(i.."amen_file",function(fname)
       local ch,samples,samplerate=audio.file_info(fname)
@@ -421,7 +437,7 @@ function Amen:setup_parameters()
       id=i..'amen_strobe',
       behavior='toggle',
       action=function(v)
-        print("amen_reverse "..v)
+        print("amen_strobe "..v)
         if v==1 then
           self:effect_strobe(i,1)
         else
@@ -521,6 +537,7 @@ function Amen:emit_note(division,t)
     if self.voice[i].sample~="" then
       if #self.voice[i].queue>0 then
         local q=table.remove(self.voice[i].queue,1)
+        print("dequeing",i,q[1])
         self:process_queue(i,q)
       end
     end
@@ -631,23 +648,6 @@ function Amen:process_queue(i,q)
         engine.amenrate(i,self.voice[i].rate,4)
       end)
     end
-  elseif q[1]==TYPE_SPLIT and i==1 or i==2 then
-    -- split only works on first one
-    if q[2] then
-      engine.amenpan(i,0.5)
-      engine.amenpan(i+2,-0.5)
-      self.voice[i].split=true
-    else
-      engine.amenpan(i,0)
-      self.voice[i].split=false
-    end
-    if self.voice[i].split then
-      engine.amenamp(i,params:get(i.."amen_amp")/2)
-      engine.amenamp(i+2,params:get(i.."amen_amp")/2)
-    else
-      engine.amenamp(i,params:get(i.."amen_amp"))
-      engine.amenamp(i+2,0)
-    end
   elseif q[1]==TYPE_LOOP then
     if q[5]~=nil then
       engine.amenloop(i,q[5],q[2],q[3])
@@ -662,8 +662,10 @@ function Amen:process_queue(i,q)
       end)
     end
   elseif q[1]==TYPE_FILTERDOWN then
+    print(i.." TYPE_FILTERDOWN")
     engine.amenlpf(i,q[2],2)
   elseif q[1]==TYPE_STROBE then
+    print(i.." TYPE_STROBE "..q[2])
     engine.amenstrobe(i,q[2])
   elseif q[1]==TYPE_VINYL then
     print("TYPE_VINYL "..q[2])

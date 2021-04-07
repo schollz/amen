@@ -143,6 +143,8 @@ function init()
   end
 
   -- params:set(voice.."amen_file",_path.audio.."amen/loop59_bpm136.wav")
+  -- params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
+  -- params:set("2amen_file",_path.audio.."kolor/bank12/loop_n_hands_bpm120.wav")
   -- engine.amenvinyl(4)
 end
 
@@ -384,12 +386,11 @@ function runner_f(c) -- our grid redraw clock
   -- switching voice or loading new sample
   if amen.voice_loaded>0 then
     voice=amen.voice_loaded
-    amen.voice_loaded=0 -- reset it
+    amen.voice_loaded=0
 
     -- load the sample into softcut for visualization
     softcut.buffer_clear()
     softcut.buffer_read_stereo(amen.voice[voice].sample,0,0,amen.voice[voice].duration_loaded)
-    beat_num=amen.voice[voice].beats
     local duration=amen.voice[voice].samples_loaded/48000
     window={0,duration}
     loop_points={0,duration}
@@ -408,6 +409,8 @@ function runner_f(c) -- our grid redraw clock
       breaker_select=1 --reset options on breaker
       transfer_loop_to_breaker()
     else
+      params:set("1amen_play",0)
+      params:set("2amen_play",0)
       -- if amen.voice[voice].sample~="" then
       --   params:set("clock_tempo",amen.voice[voice].bpm)
       -- end
@@ -426,7 +429,7 @@ function redraw()
   metro_icon(-2,3)
   screen.move(12,8)
   if breaker then
-    screen.text(amen.voice[1].beats.." beats")
+    screen.text(amen.voice[voice].beats.." beats")
     for i=1,2 do
       local keyon=keyson[i]
       local p=breaker_option_params[breaker_options[breaker_select][i]]
