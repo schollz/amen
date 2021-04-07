@@ -549,7 +549,7 @@ function box_text(x,y,s,invert)
   screen.stroke()
   screen.move(x,y+6)
   screen.text_center(s)
-  if invert==true then 
+  if invert==true then
     screen.level(15)
   end
   return x-w/2,y,w
