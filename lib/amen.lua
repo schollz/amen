@@ -93,8 +93,8 @@ function Amen:new(args)
 end
 
 function Amen:current_pos(i)
-    -- return self.voice[i].sc_pos[self.voice[i].sc_active]
-    return self.voice[i].sc_pos
+  -- return self.voice[i].sc_pos[self.voice[i].sc_active]
+  return self.voice[i].sc_pos
 end
 
 function Amen:setup_midi()
