@@ -141,8 +141,19 @@ function Amen:setup_parameters()
   self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob"}
   -- add parameters
 
-  params:add_group("AMEN",28*2+2)
-  params:add{type="number",id="amen_loop_num",name="loop",min=1,max=2,default=1,action=function(v)
+  params:add_group("AMEN",28*2+3)
+  params:add {
+    type='control',
+    id="amen_crossfade",
+      name="crossfade",
+      controlspec=controlspec.new(0,1,'lin',0,0.5,'',0.01/1),
+      action=function(v)
+          params:set("1amen_amp",v)
+          params:set("2amen_amp",1-v)  
+  end
+  }
+  params:add_separator("loop")
+  params:add{type="number",id="amen_loop_num",name="loop #",min=1,max=2,default=1,action=function(v)
     for _,param_name in ipairs(self.param_names) do
       for i=1,2 do
         if i==v then
@@ -157,15 +168,6 @@ function Amen:setup_parameters()
       self.voice_loaded=v
     end
   end}
-  params:add {
-    type='control',
-    id="amen_crossfade,
-      name="crossfade",
-      controlspec=controlspec.new(0,1,'lin',0,0.5,'amp',0.01/1),
-      action=function(v)
-          params:set("1amen_amp",v)
-          params:set("2amen_amp",1-v)
-    }
   for i=1,2 do
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
     params:set_action(i.."amen_file",function(fname)
