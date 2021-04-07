@@ -25,7 +25,9 @@
 
 amenbreaks=include("amen/lib/amen")
 
-local breaker_update=false
+local voice=1
+local update_render=false
+local update_breaker=false
 local loaded_in_menu=false
 local changed=false
 local breaker=false
@@ -50,16 +52,16 @@ local breaker_options={
   {"bitcrush","vinyl"},
 }
 local breaker_option_params={
-  bitcrush="1amen_bitcrush",
-  vinyl="1amen_vinyl",
-  strobe="1amen_strobe",
-  scratch="1amen_scratch",
-  loop="1amen_loop",
-  reverse="1amen_reverse",
-  jump="1amen_jump",
-  slow="1amen_tapestop",
-  lpf="1amen_lpf_effect",
-  stutter="1amen_stutter",
+  bitcrush="amen_bitcrush",
+  vinyl="amen_vinyl",
+  strobe="amen_strobe",
+  scratch="amen_scratch",
+  loop="amen_loop",
+  reverse="amen_reverse",
+  jump="amen_jump",
+  slow="amen_tapestop",
+  lpf="amen_lpf_effect",
+  stutter="amen_stutter",
 }
 -- WAVEFORMS
 local waveform_samples={{}}
@@ -135,12 +137,12 @@ function init()
   if not util.file_exists(_path.audio.."amen/amenbreak_bpm136.wav") then
     os.execute("mkdir -p ".._path.audio.."amen")
     os.execute("cp ".._path.code.."amen/samples/amenbreak_bpm136.wav ".._path.audio.."amen/")
-    params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
+    params:set(voice.."amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
   else
     default_load()
   end
 
-  -- params:set("1amen_file",_path.audio.."amen/loop59_bpm136.wav")
+  -- params:set(voice.."amen_file",_path.audio.."amen/loop59_bpm136.wav")
   -- engine.amenvinyl(4)
 end
 
@@ -254,7 +256,7 @@ function enc(k,d)
       zoom_inout(zoom)
     elseif k==2 then
       zoom_jog(d)
-      if amen.voice[1].sample~="" then
+      if amen.voice[voice].sample~="" then
         changed=true
       end
     else
@@ -280,25 +282,25 @@ function enc(k,d)
     if k==1 then
       breaker_select=util.wrap(breaker_select+sign(d),1,#breaker_options)
     elseif k==2 then
-      if not update_breaker(k,d) then
-        params:delta("1amen_loopstart",d)
+      if not set_effect_probability(k,d) then
+        params:delta(voice.."amen_loopstart",d)
       end
     elseif k==3 then
-      if not update_breaker(k,d) then
-        params:delta("1amen_loopend",d)
+      if not set_effect_probability(k,d) then
+        params:delta(voice.."amen_loopend",d)
       end
     end
   end
 end
 
-function update_breaker(k,d)
+function set_effect_probability(k,d)
   -- update the breaker percentage
   local sel=breaker_options[breaker_select][k-1]
   if breaker_option_params[sel]==nil then
     do return false end
   end
   print(sel,breaker_option_params[sel])
-  params:delta(breaker_option_params[sel].."_prob",d)
+  params:delta(voice..breaker_option_params[sel].."_prob",d)
   return true
 end
 
@@ -309,37 +311,37 @@ function key(k,z)
 
   if k==1 and z==1 then
     breaker=not breaker
-    breaker_update=true
+    update_breaker=true
   end
   if breaker then
     if k>1 then
       local sel=breaker_options[breaker_select][k-1]
       if sel=="reverse" then
-        params:set("1amen_reverse",z)
+        params:set(voice.."amen_reverse",z)
       elseif sel=="scratch" then
-        params:set("1amen_scratch",z)
+        params:set(voice.."amen_scratch",z)
       elseif sel=="slow" then
-        params:set("1amen_tapestop",z)
+        params:set(voice.."amen_tapestop",z)
       elseif sel=="jump" and z==1 then
-        params:set("1amen_jump",1)
-        params:set("1amen_jump",0)
+        params:set(voice.."amen_jump",1)
+        params:set(voice.."amen_jump",0)
       elseif sel=="loop" then
-        params:set("1amen_loop",z)
+        params:set(voice.."amen_loop",z)
       elseif sel=="start" and z==1 then
-        params:set("1amen_play",0)
-        params:set("1amen_play",1)
+        params:set(voice.."amen_play",0)
+        params:set(voice.."amen_play",1)
       elseif sel=="stop" and z==1 then
-        params:set("1amen_play",0)
+        params:set(voice.."amen_play",0)
       elseif sel=="lpf" then
-        params:set("1amen_lpf_effect",z)
+        params:set(voice.."amen_lpf_effect",z)
       elseif sel=="stutter" then
-        params:set("1amen_stutter",z)
+        params:set(voice.."amen_stutter",z)
       elseif sel=="strobe" and z==1 then
-        params:delta("1amen_strobe",1)
+        params:delta(voice.."amen_strobe",1)
       elseif sel=="bitcrush" and z==1 then
-        params:delta("1amen_bitcrush",1)
+        params:delta(voice.."amen_bitcrush",1)
       elseif sel=="vinyl" and z==1 then
-        params:delta("1amen_vinyl",1)
+        params:delta(voice.."amen_vinyl",1)
       end
     end
   else
@@ -363,75 +365,57 @@ function key(k,z)
 end
 
 function runner_f(c) -- our grid redraw clock
-  if recording then
+  -- do rendering
+  if update_render or recording then
+    update_render=false
     for i=1,2 do
       softcut.render_buffer(i,window[1],window[2]-window[1],128)
     end
+  end
+
+  -- recording stops if it turns over
+  if recording then
     if last_pos>current_pos[1] then
       recording_stop()
     end
     last_pos=current_pos[1]
   end
-  if not breaker and not loaded_in_menu and amen.voice[1].sample~="" then
-    loaded_in_menu=true
-    breaker=true
-    breaker_update=true
-  end
-  if breaker_update then
-    breaker_update=false
-    if breaker then
-      breaker_select=1
-      -- zoom in
-      print("loading breaker with loop points")
-      tab.print(loop_points)
-      window[1]=loop_points[1]
-      window[2]=loop_points[2]
-      if playing then
-        playback_stop()
-      elseif recording then
-        recording_stop()
-      end
-      local loop_name=""
-      if recorded or changed then
-        print("recorded or changed")
-        loop_name=save_loop()
-        changed=false
-        recorded=false
-      else
-        loop_name=amen.voice[1].sample
-      end
-      pathname,filename,ext=string.match(loop_name,"(.-)([^\\/]-%.?([^%.\\/]*))$")
-      print_message(filename)
-      clock.run(function()
-        clock.sleep(1)
-        if loop_name~="" then
-          params:set("1amen_file",loop_name)
-          default_save()
-        end
-        recorded=false
-      end)
-    else
-      if amen.voice[1].sample~="" then
-        params:set("clock_tempo",amen.voice[1].bpm)
-      end
-      engine.amenamp(1,0)
-    end
-  end
-  if amen.voice[1].load_flag then
-    amen.voice[1].load_flag=false
+
+  -- switching voice or loading new sample
+  if amen.voice_loaded>0 then
+    voice=amen.voice_loaded
+    amen.voice_loaded=0 -- reset it
+
+    -- load the sample into softcut for visualization
     softcut.buffer_clear()
-    softcut.buffer_read_stereo(amen.voice[1].sample,0,0,amen.voice[1].duration_loaded)
-    beat_num=amen.voice[1].beats
-    local duration=amen.voice[1].samples_loaded/48000
+    softcut.buffer_read_stereo(amen.voice[voice].sample,0,0,amen.voice[voice].duration_loaded)
+    beat_num=amen.voice[voice].beats
+    local duration=amen.voice[voice].samples_loaded/48000
     window={0,duration}
     loop_points={0,duration}
-    for i=1,2 do
-      softcut.render_buffer(i,window[1],window[2]-window[1],128)
+    update_render=true
+
+    if not breaker then
+      breaker=true -- automatically go into breaker mode
+      update_breaker=true
     end
-    engine.amenamp(1,params:get("1amen_amp"))
   end
-  if breaker and amen.voice[1].beats~=beat_num then
-    beat_num=amen.voice[1].beats
+
+  if update_breaker then
+    update_breaker=false
+    if breaker then
+      -- enter breaker mode
+      breaker_select=1 --reset options on breaker
+      transfer_loop_to_breaker()
+    else
+      -- if amen.voice[voice].sample~="" then
+      --   params:set("clock_tempo",amen.voice[voice].bpm)
+      -- end
+    end
+  end
+
+  if breaker and amen.voice[voice].beats~=beat_num then
+    beat_num=amen.voice[voice].beats
   end
   redraw()
 end
@@ -447,16 +431,16 @@ function redraw()
       local keyon=keyson[i]
       local p=breaker_option_params[breaker_options[breaker_select][i]]
       if p~=nil then
-        keyon=params:get(p)==1
+        keyon=params:get(voice..p)==1
       end
       x,y,w=box_text(70+41*(i-1),1,breaker_options[breaker_select][i],keyon)
       if p~=nil then
         -- show prob in a line below the box
         screen.move(x,y+11)
-        screen.line(x+w*params:get(p.."_prob")/100,y+11)
+        screen.line(x+w*params:get(voice..p.."_prob")/100,y+11)
         screen.stroke()
         screen.move(x,y+12)
-        screen.line(x+w*params:get(p.."_prob")/100,y+12)
+        screen.line(x+w*params:get(voice..p.."_prob")/100,y+12)
         screen.stroke()
       end
     end
@@ -472,15 +456,15 @@ function redraw()
   lp[1]=util.round(util.linlin(window[1],window[2],1,128,loop_points[1]))
   lp[2]=util.round(util.linlin(window[1],window[2],1,128,loop_points[2]))
   if breaker then
-    lp[1]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopstart")))
-    lp[2]=util.round(util.linlin(0,1,1,128,params:get("1amen_loopend")))
+    lp[1]=util.round(util.linlin(0,1,1,128,params:get(voice.."amen_loopstart")))
+    lp[2]=util.round(util.linlin(0,1,1,128,params:get(voice.."amen_loopend")))
   end
   if loop_points[2]>window[2] then
     lp[2]=129
   end
   local pos=util.round(util.linlin(window[1],window[2],1,128,current_pos[1]))
   if breaker then
-    pos=util.round(util.linlin(0,1,1,128,amen.current_sc_pos))
+    pos=util.round(util.linlin(0,1,1,128,amen:current_pos(voice)))
   end
   if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
     for j=1,2 do
@@ -642,7 +626,7 @@ function ls_loop_files()
   for _,fname in ipairs(list_files(_path.audio.."amen")) do
     num_files=num_files+1
     local loop_num=tonumber(string.match(fname,'loop(%d*)'))
-    if loop_num>current_max then
+    if loop_num~=nil and loop_num>current_max then
       current_max=loop_num
     end
   end
@@ -650,12 +634,31 @@ function ls_loop_files()
   return current_max,num_files
 end
 
-function save_loop()
+function transfer_loop_to_breaker()
+  if playing then
+    playback_stop()
+  elseif recording then
+    recording_stop()
+  end
+
   current_max,num_files=ls_loop_files()
   fname="loop"..current_max.."_bpm"..math.floor(clock.get_tempo())..".wav"
   print("saving loop between points "..loop_points[1].." and "..loop_points[2])
   softcut.buffer_write_stereo(_path.audio.."amen/"..fname,loop_points[1],loop_points[2]-loop_points[1])
-  return _path.audio.."amen/"..fname
+  
+
+  print_message(fname)
+
+  -- give it some time to save
+  local path_to_file=_path.audio.."amen/"..fname
+  clock.run(function()
+    clock.sleep(1)
+    if loop_name~="" then
+      params:set(voice.."amen_file",path_to_file)
+      default_save()
+    end
+    recorded=false
+  end)
 end
 
 function default_load()
@@ -665,16 +668,16 @@ function default_load()
     f:close()
     print(content)
     if content~=nil then
-      params:set("1amen_file",content)
+      params:set(voice.."amen_file",content)
     end
   else
-    params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
+    params:set(voice.."amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
   end
 end
 
 function default_save()
   f=io.open(_path.data.."amen/last_file","w")
-  f:write(params:get("1amen_file"))
+  f:write(params:get(voice.."amen_file"))
   f:close()
 end
 

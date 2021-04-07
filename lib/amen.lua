@@ -16,7 +16,7 @@ function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
   local args=args==nil and {} or args
   l.debug=args.debug
-  l.current_sc_pos=0
+
   -- set engine
 
   l.voice={}
@@ -34,6 +34,8 @@ function Amen:new(args)
       rate=1,
       split=false,
       spin=0,
+      sc_pos={0,0},
+      sc_active={1},
     }
   end
   l.voice_loaded=0
@@ -69,15 +71,32 @@ function Amen:new(args)
   -- osc input
   osc.event=function(path,args,from)
     -- print(args[2])
-    l.current_sc_pos=args[2]
+    if path=="amp_crossfade" then
+      l.voice[args[1]].sc_active=args[2]
+    elseif path=="poscheck" then
+      if args[1]==0 then
+        l.voice[1].sc_pos[1]=args[2]
+      elseif args[1]==1 then
+        l.voice[2].sc_pos[1]=args[2]
+      elseif args[1]==2 then
+        l.voice[1].sc_pos[2]=args[2]
+      elseif args[1]==3 then
+        l.voice[2].sc_pos[2]=args[2]
+      end
+      tab.print(l.voice[1].sc_pos)
+      print(l.voice[1].sc_active)
+    end
   end
 
 
   return l
 end
 
-function Amen:setup_midi()
+function Amen:current_pos(i)
+    return self.voice[i].sc_pos[self.voice[i].sc_active]
+end
 
+function Amen:setup_midi()
   -- initiate midi connections
   self.device={}
   self.device_list={"disabled"}
@@ -143,7 +162,6 @@ function Amen:setup_parameters()
         self.voice[i].samples_loaded=self.voice[i].samples
       end
       self.voice[i].sample=fname
-      self.voice[i].load_flag=true
       tab.print(self.voice[i])
       print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
       engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
@@ -253,7 +271,7 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s=self.current_sc_pos-clock.get_beat_sec()/self.voice[i].duration_loaded
+          local s=self:current_pos(i)-clock.get_beat_sec()/self.voice[i].duration_loaded
           local e=s+clock.get_beat_sec()/self.voice[i].duration_loaded
           self:effect_loop(i,s,e)
           self.voice[i].disable_reset=true
@@ -277,7 +295,7 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_stutter "..v)
         if v==1 then
-          local s=self.current_sc_pos
+          local s=self:current_pos(i)
           local e=s+math.random(30,100)/self.voice[i].duration_loaded/1000
           print("stutter",s,e)
           self:effect_loop(i,s,e)
