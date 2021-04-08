@@ -15,18 +15,19 @@ the name comes from [Gregory Coleman's performance in "Amen, Brother"](https://w
 
 - norns
 
-
 ## documentation
 
 there are two different modes - a "*sampling*" mode for making loops and a "*performance*" mode for playing loops back and punching-in effects. switch between the modes using k1. if you don't want to sample a loop you can use the parameters menu to load a loop (just make sure the loop you load has `bpmX` somewhere in the title so that the bpm can be correctly attributed).
 
-### sampling mode
+### sampler mode
 
-sampling mode is indicated by the "rec" and "play" buttons.
+sampler mode is indicated by the "rec" and "play" buttons.
 
 ![performance](https://user-images.githubusercontent.com/6550035/113587030-1bb69f00-95e3-11eb-92e7-37520fdd24c0.png)
 
 in this mode you can sample new loops or edit the start/end points of a current loop.
+
+**sampler mode controls:**
 
 - k1 switches to *performance mode* 
 - k2 starts/stops recording
@@ -35,7 +36,8 @@ in this mode you can sample new loops or edit the start/end points of a current 
 - e2 jogs loop window
 - e3 changes loop length
 
-_note:_ you can also enter *performance mode* by loading a file via the parameters (`AMEN > load file`). make sure the file you load has `bpmX` in the name, where `X` is the bpm of the file.
+**sampling strategy**: this sampler has plenty of memory (~minutes) so its best to record more than you need and then jog the sample window after sampling is done. to do this, first turn e1 to expand the recording space and then press k2 to start/stop recording. when done recording use e2 and e3 to clip just the sample you want to use (e1 is handy again here to zoom in on the beginning to get the right transients).
+
 
 ### performance mode
 
@@ -43,8 +45,22 @@ performance mode is indicated by the "stop" and "start" buttons.
 
 ![performance](https://user-images.githubusercontent.com/6550035/113587036-1c4f3580-95e3-11eb-8772-ab1ab995ed5e.png)
 
+you can enter *performance mode* either by pressing k1 while in *sampler mode*, or by loading a file via the parameters (`AMEN > load file`). make sure the file you load has `bpmX` in the name, where `X` is the bpm of the file so that the tempo is matched correctly.
 
-in this mode you can playback the current loop with all sorts of punch-in effects including:
+**performance mode controls:**
+
+- k1 switches to *sampler mode*
+- k2 activates left effect
+- k3 activates right effect
+- e1 switches effects
+- e2/e3 changes effect probabilities
+- OR
+- e2 changes loop start (unquantized)
+- e3 changes loop end (quantized)
+- when stop/start is shown
+
+
+in this mode you can playback the current loop with all sorts of punch-in effects (its pretty easy to add more effects but to keep cpu usage low, they need to be not super intensive). current effects:
 
 - scratching
 - looping / retrigger
@@ -56,21 +72,6 @@ in this mode you can playback the current loop with all sorts of punch-in effect
 - strobe / tremelo
 - bitcrush
 - vinyl / lofi
-
-its pretty easy to add more effects (but to keep cpu usage low, they need to be not super intensive).
-
-in the parameters menu you can also adjust probabilities of the effects for automatically activating.
-
-
-- k1 switches to *sampler mode*
-- k2 activates left effect
-- k3 activates right effect
-- e1 switches effects
-- e2/e3 changes effect probabilities
-- OR
-- e2 changes loop start (unquantized)
-- e3 changes loop end (quantized)
-- when stop/start is shown
 
 **unquantized vs quantized loop lengths**: when you see "stop" and "start" you can change the loop lengths manually with e2 and e3. e2 changes the start position and e3 changes the end position. however, its important to note that when you change e2 you are making fine adjustments without quantizing. conversely, wen you change e3 it will force the loop to now snap to the nearest beat. so if don't want to snap to a beat, set e2 last, or conversely if you do want to snap to a beat, use e3 after adjusting e2. the beat sync will still be quantized in both cases, but it can be interesting to have (or not have) a quantized loop length.
 
