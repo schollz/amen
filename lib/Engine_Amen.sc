@@ -40,7 +40,7 @@ Engine_Amen : CroneEngine {
         }).add;
 
         // two players per buffer (4 players total)
-        (0..5).do({arg i; 
+        (0..4).do({arg i; 
             SynthDef("playerAmen"++i,{ 
                 arg bufnum, amp=0, t_trig=0, amp_crossfade=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
@@ -85,20 +85,53 @@ Engine_Amen : CroneEngine {
                     level:amp*Lag.kr(amp_crossfade,0.2)
                 );
 
-                if (i.mod(2)==0, {                    
-                    SendTrig.kr(Impulse.kr(30),amp_crossfade,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
-                },{});
+                SendTrig.kr(Impulse.kr(30),i,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
 
                 Out.ar(0,snd)
             }).add; 
         });
 
+
         osfun = OSCFunc({ 
             arg msg, time; 
                 // [time, msg].postln;
-            if (msg[2]>0, {
-                NetAddr("127.0.0.1", 10111).sendMsg("poscheck",time,msg[3]);   //sendMsg works out the correct OSC message for you
-            },{})
+            // voice "1" uses voices 0 and 2 in sc
+            if (msg[2]==0, {
+                if (playerSwap[0]==0, {
+                    NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
+                },{});
+            },{
+                if (msg[2]==2, {
+                if (playerSwap[0]==1, {
+                    NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
+                },{});
+                },{
+                    // voice "2" uses voices 1 and 3 in sc
+                    if (msg[2]==1, {
+                    if (playerSwap[1]==0, {
+                        NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);   //sendMsg works out the correct OSC message for you
+                    },{});
+                    },{
+                        if (msg[2]==3, {
+                        if (playerSwap[1]==1, {
+                            NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);   //sendMsg works out the correct OSC message for you
+                        },{});
+                        },{});
+                    });
+                });
+            });
+
+            // if ((msg[2]==2)*(playerSwap[0]==1), {
+            //     NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
+            // },{});
+
+            // NetAddr("127.0.0.1", 10111).sendMsg("poscheck",msg[2],msg[3]);   //sendMsg works out the correct OSC message for you
+            // if (msg[2]==0, {
+            //     NetAddr("127.0.0.1", 10111).sendMsg("amp_crossfade",1,playerSwap[0]+1);   //sendMsg works out the correct OSC message for you
+            // },{});
+            // if (msg[2]==1, {
+            //     NetAddr("127.0.0.1", 10111).sendMsg("amp_crossfade",2,playerSwap[1]+1);   //sendMsg works out the correct OSC message for you
+            // },{});
         },'/tr', context.server.addr);
 
         playerAmen = Array.fill(4,{arg i;

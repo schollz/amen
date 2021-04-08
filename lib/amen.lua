@@ -16,7 +16,7 @@ function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
   local args=args==nil and {} or args
   l.debug=args.debug
-  l.current_sc_pos=0
+
   -- set engine
 
   l.voice={}
@@ -26,6 +26,7 @@ function Amen:new(args)
       loop_end=1,
       sample="",
       bpm=60,
+      beat=0,
       beats=0,
       beats_loaded=0,
       queue={},
@@ -34,8 +35,11 @@ function Amen:new(args)
       rate=1,
       split=false,
       spin=0,
+      sc_pos=0,
+      sc_active={1},
     }
   end
+  l.voice_loaded=0
 
   l:setup_midi()
   l:setup_parameters()
@@ -43,7 +47,6 @@ function Amen:new(args)
   -- setup lattice
   l.metronome_tick=false
   l.bpm_current=0
-  l.pulse=0
   l.lattice=lattice:new({
     ppqn=64
   })
@@ -67,16 +70,34 @@ function Amen:new(args)
 
   -- osc input
   osc.event=function(path,args,from)
-    -- print(args[2])
-    l.current_sc_pos=args[2]
+    l.voice[args[1]].sc_pos=args[2]
+    -- if path=="amp_crossfade" then
+    --   l.voice[args[1]].sc_active=args[2]
+    -- elseif path=="poscheck" then
+    --   if args[1]==0 then
+    --     l.voice[1].sc_pos[1]=args[2]
+    --   elseif args[1]==1 then
+    --     l.voice[2].sc_pos[1]=args[2]
+    --   elseif args[1]==2 then
+    --     l.voice[1].sc_pos[2]=args[2]
+    --   elseif args[1]==3 then
+    --     l.voice[2].sc_pos[2]=args[2]
+    --   end
+    --   tab.print(l.voice[1].sc_pos)
+    --   print(l.voice[1].sc_active)
+    -- end
   end
 
 
   return l
 end
 
-function Amen:setup_midi()
+function Amen:current_pos(i)
+  -- return self.voice[i].sc_pos[self.voice[i].sc_active]
+  return self.voice[i].sc_pos
+end
 
+function Amen:setup_midi()
   -- initiate midi connections
   self.device={}
   self.device_list={"disabled"}
@@ -117,10 +138,37 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob"}
   -- add parameters
-  params:add_group("AMEN",29*2)
+
+  params:add_group("AMEN",28*2+3)
+  params:add {
+    type='control',
+    id="amen_crossfade",
+    name="crossfade",
+    controlspec=controlspec.new(0,1,'lin',0,0.5,'',0.01/1),
+    action=function(v)
+      params:set("1amen_amp",v)
+      params:set("2amen_amp",1-v)
+    end
+  }
+  params:add_separator("loop")
+  params:add{type="number",id="amen_loop_num",name="loop #",min=1,max=2,default=1,action=function(v)
+    for _,param_name in ipairs(self.param_names) do
+      for i=1,2 do
+        if i==v then
+          params:show(i..param_name)
+        else
+          params:hide(i..param_name)
+        end
+      end
+    end
+    _menu.rebuild_params()
+    if params:get(v.."amen_file")~="" then
+      self.voice_loaded=v
+    end
+  end}
   for i=1,2 do
-    params:add_separator("loop "..i)
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
     params:set_action(i.."amen_file",function(fname)
       local ch,samples,samplerate=audio.file_info(fname)
@@ -142,13 +190,14 @@ function Amen:setup_parameters()
         self.voice[i].samples_loaded=self.voice[i].samples
       end
       self.voice[i].sample=fname
-      self.voice[i].load_flag=true
       tab.print(self.voice[i])
       print("loaded "..fname..": "..self.voice[i].beats.." beats at "..self.voice[i].bpm.."bpm")
       engine.amenbpm(i,self.voice[i].bpm,self.bpm_current)
       engine.amenload(i,fname,self.voice[i].samples_loaded)
       engine.amenamp(i,params:get(i.."amen_amp"))
       params:set(i.."amen_play",0)
+      self.voice_loaded=i -- trigger for loading images
+      _menu.redraw()
     end)
     params:add{
       type='binary',
@@ -251,7 +300,7 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local s=self.current_sc_pos-clock.get_beat_sec()/self.voice[i].duration_loaded
+          local s=self:current_pos(i)-clock.get_beat_sec()/self.voice[i].duration_loaded
           local e=s+clock.get_beat_sec()/self.voice[i].duration_loaded
           self:effect_loop(i,s,e)
           self.voice[i].disable_reset=true
@@ -275,7 +324,7 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_stutter "..v)
         if v==1 then
-          local s=self.current_sc_pos
+          local s=self:current_pos(i)
           local e=s+math.random(30,100)/self.voice[i].duration_loaded/1000
           print("stutter",s,e)
           self:effect_loop(i,s,e)
@@ -400,7 +449,7 @@ function Amen:setup_parameters()
       id=i..'amen_strobe',
       behavior='toggle',
       action=function(v)
-        print("amen_reverse "..v)
+        print("amen_strobe "..v)
         if v==1 then
           self:effect_strobe(i,1)
         else
@@ -470,6 +519,7 @@ function Amen:emit_note(division,t)
   for i=1,2 do
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       print(t/32%(self.voice[i].beats*2))
+      self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
@@ -500,6 +550,7 @@ function Amen:emit_note(division,t)
     if self.voice[i].sample~="" then
       if #self.voice[i].queue>0 then
         local q=table.remove(self.voice[i].queue,1)
+        print("dequeing",i,q[1])
         self:process_queue(i,q)
       end
     end
@@ -610,23 +661,6 @@ function Amen:process_queue(i,q)
         engine.amenrate(i,self.voice[i].rate,4)
       end)
     end
-  elseif q[1]==TYPE_SPLIT and i==1 or i==2 then
-    -- split only works on first one
-    if q[2] then
-      engine.amenpan(i,0.5)
-      engine.amenpan(i+2,-0.5)
-      self.voice[i].split=true
-    else
-      engine.amenpan(i,0)
-      self.voice[i].split=false
-    end
-    if self.voice[i].split then
-      engine.amenamp(i,params:get(i.."amen_amp")/2)
-      engine.amenamp(i+2,params:get(i.."amen_amp")/2)
-    else
-      engine.amenamp(i,params:get(i.."amen_amp"))
-      engine.amenamp(i+2,0)
-    end
   elseif q[1]==TYPE_LOOP then
     if q[5]~=nil then
       engine.amenloop(i,q[5],q[2],q[3])
@@ -641,8 +675,10 @@ function Amen:process_queue(i,q)
       end)
     end
   elseif q[1]==TYPE_FILTERDOWN then
+    print(i.." TYPE_FILTERDOWN")
     engine.amenlpf(i,q[2],2)
   elseif q[1]==TYPE_STROBE then
+    print(i.." TYPE_STROBE "..q[2])
     engine.amenstrobe(i,q[2])
   elseif q[1]==TYPE_VINYL then
     print("TYPE_VINYL "..q[2])
@@ -714,6 +750,8 @@ end
 
 
 return Amen
+
+
 
 
 
