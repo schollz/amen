@@ -403,6 +403,7 @@ function runner_f(c) -- our grid redraw clock
       breaker=true -- automatically go into breaker mode
       update_breaker=true
     end
+    default_save()
   end
 
   if update_breaker then
@@ -410,7 +411,11 @@ function runner_f(c) -- our grid redraw clock
     if breaker then
       -- enter breaker mode
       breaker_select=1 --reset options on breaker
-      transfer_loop_to_breaker()
+      if recorded or changed then
+        transfer_loop_to_breaker()
+        recorded=false
+        changed=false
+      end
     else
       params:set("1amen_play",0)
       params:set("2amen_play",0)
@@ -661,7 +666,6 @@ function transfer_loop_to_breaker()
     clock.sleep(1)
     if loop_name~="" then
       params:set(voice.."amen_file",path_to_file)
-      default_save()
     end
     recorded=false
   end)
@@ -673,7 +677,7 @@ function default_load()
     local content=f:read("*all")
     f:close()
     print(content)
-    if content~=nil then
+    if content~=nil and util.file_exists(content) then
       params:set(voice.."amen_file",content)
     end
   else
