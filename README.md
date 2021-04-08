@@ -4,7 +4,12 @@ quantized loops with punch-in effects + sampler.
 
 ![image](https://user-images.githubusercontent.com/6550035/113587034-1c4f3580-95e3-11eb-9a6b-0274ccd91480.png)
 
-for [my latest album](https://infinitedigits.bandcamp.com/album/be-the-light-be-the-void) I made a lot of breakbeats and some of those breakbeats were informed by norns scripts (like [abacus](https://llllllll.co/t/abacus/37871), [clcks](https://llllllll.co/t/clcks/), [glitchlets](https://llllllll.co/t/clcks/), and [beets](https://llllllll.co/t/beets-1-1-1/30069)). this latest script is a different take on those previous iterations by utilizing supercollider for loop splicing and softcut for recording. supercollider provides a really seamless loop slicing engine by even having crossfades when jumping in a loop to prevent pops (although no crossfading on a single loop turnover like in softcut) and it allows really easy plugging in effects.
+for [my latest album](https://infinitedigits.bandcamp.com/album/be-the-light-be-the-void) I made a lot of breakbeats and some of those breakbeats were informed by norns scripts (like [abacus](https://llllllll.co/t/abacus/37871), [clcks](https://llllllll.co/t/clcks/), [glitchlets](https://llllllll.co/t/clcks/), and [beets](https://llllllll.co/t/beets-1-1-1/30069)). this latest script is a different take on those previous iterations by utilizing supercollider for loop splicing and softcut for recording. supercollider provides a really seamless loop slicing engine, allowing crossfades when jumping in a loop to prevent pops (although no crossfading on a single loop turnover like in softcut) as well as easily allowing lots of effects.
+
+another aim of this script is to make sure things are pretty much always "in sync" / "on beat". the loops are synced up with the norns internal tempo every loop (unless using an effect) and all the effects are queued up to occur on subdivided beats. loops loaded from disk are automatically re-pitched into the current tempo as long as their name contains `bpmX` where `X` is the original bpm of the file.
+
+the name comes from [Gregory Coleman's performance in "Amen, Brother"](https://www.youtube.com/watch?v=5SaFTm2bcac), now a legendary sample used in all sorts of music. 
+
 
 ## requirements
 
@@ -13,30 +18,30 @@ for [my latest album](https://infinitedigits.bandcamp.com/album/be-the-light-be-
 
 ## documentation
 
-there are two different modes - a "*maker*" mode for making loops and a "*breaker*" mode for playing loops back and adding effects. switch between the modes using k1. if you don't want to sample a loop you can use the parameters menu to load a loop (just make sure the loop you load has `bpmX` somewhere in the title so that the bpm can be correctly attributed).
+there are two different modes - a "*sampling*" mode for making loops and a "*performance*" mode for playing loops back and punching-in effects. switch between the modes using k1. if you don't want to sample a loop you can use the parameters menu to load a loop (just make sure the loop you load has `bpmX` somewhere in the title so that the bpm can be correctly attributed).
 
-### maker mode
+### sampling mode
 
-maker mode is indicated by the "rec" and "play" buttons.
+sampling mode is indicated by the "rec" and "play" buttons.
 
-![breaker](https://user-images.githubusercontent.com/6550035/113587030-1bb69f00-95e3-11eb-92e7-37520fdd24c0.png)
+![performance](https://user-images.githubusercontent.com/6550035/113587030-1bb69f00-95e3-11eb-92e7-37520fdd24c0.png)
 
 in this mode you can sample new loops or edit the start/end points of a current loop.
 
-- k1 switches to *breaker mode* 
+- k1 switches to *performance mode* 
 - k2 starts/stops recording
 - k3 starts/stops playback of loop
 - e1 zooms into loop start
 - e2 jogs loop window
 - e3 changes loop length
 
-_note:_ you can also enter *breaker mode* by loading a file via the parameters (`AMEN > load file`). make sure the file you load has `bpmX` in the name, where `X` is the bpm of the file.
+_note:_ you can also enter *performance mode* by loading a file via the parameters (`AMEN > load file`). make sure the file you load has `bpmX` in the name, where `X` is the bpm of the file.
 
-### breaker mode
+### performance mode
 
-breaker mode is indicated by the "stop" and "start" buttons.
+performance mode is indicated by the "stop" and "start" buttons.
 
-![breaker](https://user-images.githubusercontent.com/6550035/113587036-1c4f3580-95e3-11eb-8772-ab1ab995ed5e.png)
+![performance](https://user-images.githubusercontent.com/6550035/113587036-1c4f3580-95e3-11eb-8772-ab1ab995ed5e.png)
 
 
 in this mode you can playback the current loop with all sorts of punch-in effects including:
@@ -57,7 +62,7 @@ its pretty easy to add more effects (but to keep cpu usage low, they need to be 
 in the parameters menu you can also adjust probabilities of the effects for automatically activating.
 
 
-- k1 switches to *maker mode*
+- k1 switches to *sampler mode*
 - k2 activates left effect
 - k3 activates right effect
 - e1 switches effects

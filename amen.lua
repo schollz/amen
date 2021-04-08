@@ -8,7 +8,7 @@
 --    ▼ instructions below ▼
 --
 -- MAKER MODE:
--- k1 switches to breaker mode
+-- k1 enters performance mode
 -- k2 starts/stops recording
 -- k3 starts/stops playback
 -- e1 zooms into loop start
@@ -16,14 +16,14 @@
 -- e3 changes loop length
 --
 -- BREAKER MODE:
--- k1 switches to *maker mode*
+-- k1 enters sampler mode
 -- k2 activates left effect
 -- k3 activates right effect
 -- e1 switches effects
--- e2/e3 changes effect probabilities
+-- e2/e3 changes effect prob
 -- OR
--- e2 changes loop start (unquantized)
--- e3 changes loop end (quantized)
+-- e2 changes start (unquantized)
+-- e3 changes end (quantized)
 -- when stop/start is shown
 
 amenbreaks=include("amen/lib/amen")
