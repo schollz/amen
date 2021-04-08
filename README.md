@@ -1,10 +1,10 @@
 # amen
 
-quantized loops with punch-in effects + sampler.
+sampler and mangler of loops.
 
 ![image](https://user-images.githubusercontent.com/6550035/113587034-1c4f3580-95e3-11eb-9a6b-0274ccd91480.png)
 
-for [my latest album](https://infinitedigits.bandcamp.com/album/be-the-light-be-the-void) I made a lot of breakbeats and some of those breakbeats were informed by norns scripts (like [abacus](https://llllllll.co/t/abacus/37871), [clcks](https://llllllll.co/t/clcks/), [glitchlets](https://llllllll.co/t/clcks/), and [beets](https://llllllll.co/t/beets-1-1-1/30069)). this latest script is a different take on those previous iterations by utilizing supercollider for loop splicing and softcut for recording. supercollider provides a really seamless loop slicing engine, allowing crossfades when jumping in a loop to prevent pops (although no crossfading on a single loop turnover like in softcut) as well as easily allowing lots of effects.
+for [my latest album](https://infinitedigits.bandcamp.com/album/be-the-light-be-the-void) I made a lot of breakbeats and some of those breakbeats were informed by norns scripts (like [abacus](https://llllllll.co/t/abacus/37871), [clcks](https://llllllll.co/t/clcks/), [glitchlets](https://llllllll.co/t/clcks/), and [beets](https://llllllll.co/t/beets-1-1-1/30069)). this latest script is a different take on those previous iterations by utilizing supercollider for loop mangling and softcut for loop sampling. supercollider provides a really seamless loop slicing engine by allowing crossfades when jumping in a loop to prevent pops (although no crossfading on a single loop turnover like in softcut) as well as easily allowing lots of effects.
 
 another aim of this script is to make sure things are pretty much always "in sync" / "on beat". the loops are synced up with the norns internal tempo every loop (unless using an effect) and all the effects are queued up to occur on subdivided beats. loops loaded from disk are automatically re-pitched into the current tempo as long as their name contains `bpmX` where `X` is the original bpm of the file.
 
