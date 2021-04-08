@@ -138,10 +138,10 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
-  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob"}
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_forcejump"}
   -- add parameters
 
-  params:add_group("AMEN",28*2+3)
+  params:add_group("AMEN",29*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -266,8 +266,8 @@ function Amen:setup_parameters()
           clock.cancel(self.debounce_loopstart)
         end
         self.debounce_loopstart=clock.run(function()
-          clock.sleep(0.2)
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+          clock.sync(1)
+          engine.amenloopnt(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
     }
@@ -283,10 +283,10 @@ function Amen:setup_parameters()
           clock.cancel(self.debounce_loopend)
         end
         self.debounce_loopend=clock.run(function()
-          clock.sleep(0.2)
+          clock.sync(1)
           self.voice[i].beats=util.round(self.voice[i].beats_loaded*(v-params:get(i.."amen_loopstart")))
           params:set(i.."amen_loopend",params:get(i.."amen_loopstart")+self.voice[i].beats/self.voice[i].beats_loaded,true)
-          engine.amenloop(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
+          engine.amenloopnt(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
     }
@@ -503,6 +503,23 @@ function Amen:setup_parameters()
       id=i..'amen_bitcrush_prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
+    params:add{
+      type='control',
+      name='force jump',
+      id=i..'amen_forcejump',
+      controlspec=controlspec.new(0,1,'lin',0,0,'%',0.001/1),  
+      action=function(v)
+        -- if outside the loop, then set the loop
+        -- if inside the loop then jump
+        if v < params:get(i.."amen_loopstart") then
+          params:set(i.."amen_loopstart",v)
+        elseif v > params:get(i.."amen_loopend") then
+          params:set(i.."amen_loopend",v)
+        else
+          self:effect_jump(i,v)
+        end
+      end
+    }
   end
 end
 
@@ -640,7 +657,6 @@ function Amen:process_queue(i,q)
       end)
     end
   elseif q[1]==TYPE_JUMP then
-    print(i,q[2],params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
     self:loop(i,q[2])
   elseif q[1]==TYPE_RATE then
     local original_rate=self.voice[i].rate
