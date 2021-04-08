@@ -145,12 +145,12 @@ function Amen:setup_parameters()
   params:add {
     type='control',
     id="amen_crossfade",
-      name="crossfade",
-      controlspec=controlspec.new(0,1,'lin',0,0.5,'',0.01/1),
-      action=function(v)
-          params:set("1amen_amp",v)
-          params:set("2amen_amp",1-v)  
-  end
+    name="crossfade",
+    controlspec=controlspec.new(0,1,'lin',0,0.5,'',0.01/1),
+    action=function(v)
+      params:set("1amen_amp",v)
+      params:set("2amen_amp",1-v)
+    end
   }
   params:add_separator("loop")
   params:add{type="number",id="amen_loop_num",name="loop #",min=1,max=2,default=1,action=function(v)
@@ -197,6 +197,7 @@ function Amen:setup_parameters()
       engine.amenamp(i,params:get(i.."amen_amp"))
       params:set(i.."amen_play",0)
       self.voice_loaded=i -- trigger for loading images
+      _menu.redraw()
     end)
     params:add{
       type='binary',
@@ -753,4 +754,4 @@ return Amen
 
 
 
-   
+

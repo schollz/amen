@@ -16,12 +16,15 @@
 -- e3 changes loop length
 --
 -- BREAKER MODE:
--- k1 switches to maker mode
+-- k1 switches to *maker mode*
 -- k2 activates left effect
 -- k3 activates right effect
 -- e1 switches effects
--- e2 changes start (unquantized)
--- e3 changes end (quantized)
+-- e2/e3 changes effect probabilities
+-- OR
+-- e2 changes loop start (unquantized)
+-- e3 changes loop end (quantized)
+-- when stop/start is shown
 
 amenbreaks=include("amen/lib/amen")
 
