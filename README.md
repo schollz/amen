@@ -63,7 +63,7 @@ sampler mode is indicated by the "rec" and "play" buttons.
 
 ![performance](https://user-images.githubusercontent.com/6550035/113587030-1bb69f00-95e3-11eb-92e7-37520fdd24c0.png)
 
-in this mode you can sample new loops or edit the start/end points of a current loop.
+in this mode you can sample stereo audio to make new loops or edit the start/end points of a current loop from *performance mode*.
 
 **sampler mode controls:**
 
@@ -74,7 +74,7 @@ in this mode you can sample new loops or edit the start/end points of a current 
 - e2 jogs loop window
 - e3 changes loop length
 
-**sampling strategy**: this sampler has plenty of memory (~minutes) so its best to record more than you need and then fit the sample window to what you need after recording is over. to get started, first turn e1 to expand the recording space and then press k2 to start/stop recording. when done recording use e2 and e3 to clip just the sample you want to use (e1 is handy again here to zoom in on the beginning to get the right transients).
+**sampling strategy**: this sampler has plenty of memory (~minutes) so its best to record more than you need and then fit the sample window to what you need after recording is over. to get started, first turn e1 to expand the recording space to a little more than you might need and then press k2 to start/stop recording. when done recording use e2 and e3 to clip just the sample you want to use (e1 is handy again here to zoom in on the beginning to get the right transients).
 
 
 
