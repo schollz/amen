@@ -27,6 +27,7 @@
 -- when stop/start is shown
 
 amenbreaks=include("amen/lib/amen")
+amengrid=include("amen/lib/amengrid")
 
 local voice=1
 local update_render=false
@@ -72,6 +73,7 @@ engine.name="Amen"
 
 function init()
   amen=amenbreaks:new()
+  ameng=amengrid:new({amen=amen})
 
   -- make folder
   os.execute("mkdir -p ".._path.audio.."amen")

@@ -98,6 +98,7 @@ function Amen:current_pos(i)
 end
 
 function Amen:setup_midi()
+  local ending=".wav"
   -- initiate midi connections
   self.device={}
   self.device_list={"disabled"}
@@ -121,15 +122,17 @@ function Amen:setup_midi()
         if msg.type=='start' or msg.type=='continue' then
           print(name.." starting clock")
           for i=1,2 do
-            if params:get(i.."amen_file")~="" then
-              params:set(i.."amen_play",1)
-            end
+                local fname= params:get(i.."amen_file")
+                if fname:sub(-#ending)==ending then
+                params:set(i.."amen_play",1)
+                end
           end
         elseif msg.type=="stop" then
           for i=1,2 do
-            if params:get(i.."amen_file")~="" then
-              params:set(i.."amen_play",0)
-            end
+                local fname= params:get(i.."amen_file")
+                if fname:sub(-#ending)==ending then
+                params:set(i.."amen_play",0)
+                end
           end
         end
       end
@@ -138,10 +141,11 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
-  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump"}
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend"}
+      local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",29*2+3)
+  params:add_group("AMEN",31*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -164,13 +168,17 @@ function Amen:setup_parameters()
       end
     end
     _menu.rebuild_params()
-    if params:get(v.."amen_file")~="" then
+    local fname= params:get(v.."amen_file")
+      if fname:sub(-#ending)==ending then
       self.voice_loaded=v
-    end
+      end
   end}
   for i=1,2 do
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
     params:set_action(i.."amen_file",function(fname)
+      if fname:sub(-#ending)~=ending then
+        do return end
+      end
       local ch,samples,samplerate=audio.file_info(fname)
       self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
       if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
@@ -285,11 +293,18 @@ function Amen:setup_parameters()
         self.debounce_loopend=clock.run(function()
           clock.sync(1)
           self.voice[i].beats=util.round(self.voice[i].beats_loaded*(v-params:get(i.."amen_loopstart")))
-          params:set(i.."amen_loopend",params:get(i.."amen_loopstart")+self.voice[i].beats/self.voice[i].beats_loaded,true)
+          if self.voice[i].beats < 1 then
+            self.voice[i].beats=1
+          end
+          if params:get(i.."amen_quantize_loopend")==2 then
+            params:set(i.."amen_loopend",params:get(i.."amen_loopstart")+self.voice[i].beats/self.voice[i].beats_loaded,true)
+          end
           engine.amenloopnt(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
         end)
       end
     }
+    self.debounce_loopend=nil
+    params:add_option(i.."amen_quantize_loopend","quantize loopend",{"no","yes"},1)
 
     -- effects
     params:add{

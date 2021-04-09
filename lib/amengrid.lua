@@ -1,4 +1,4 @@
-local pattern_time = require("pattern")
+-- local pattern_time = require("pattern")
 local AmenGrid={}
 
 
@@ -19,6 +19,7 @@ function AmenGrid:new(args)
 
   -- setup visual
   m.visual={}
+  m.grid_width=16
   for i=1,8 do
     m.visual[i]={}
     for j=1,m.grid_width do
@@ -31,7 +32,7 @@ function AmenGrid:new(args)
 
   -- grid refreshing
   m.grid_refresh=metro.init()
-  m.grid_refresh.time=0.1
+  m.grid_refresh.time=0.03
   m.grid_refresh.event=function()
     if m.grid_on then
       m:grid_redraw()
@@ -50,7 +51,7 @@ end
 
 function AmenGrid:key_press(row,col,on)
   if on then
-    self.pressed_buttons[row..","..col]=self:current_time()
+    self.pressed_buttons[row..","..col]=true
   else
     self.pressed_buttons[row..","..col]=nil
   end
@@ -71,7 +72,9 @@ function AmenGrid:expandjump(row,col)
   local val1=nil
   local val2=nil
   for k,_ in pairs(self.pressed_buttons) do
-    row,col=k:match("(%d+),(%d+)")    
+    row,col=k:match("(%d+),(%d+)")   
+    row=tonumber(row)
+    col=tonumber(col) 
     local val =  ((row-1)*8+(col-1))/47
     if voice==2 then 
       val = ((row-1)*8+(col-9))/47
@@ -96,12 +99,13 @@ function AmenGrid:expandjump(row,col)
     val2=val
   end
   if val2 ~= nil then 
-    params:set(voice.."amen_loopstart",val1)
     params:set(voice.."amen_loopend",val2)
+    params:set(voice.."amen_loopstart",val1)
   else
-    params:set(voice.."amen_expandjump",val1)
+    params:set(voice.."amen_expandjump",val1+math.random(1,1000)/100000)
   end
 end
+
 
 function AmenGrid:get_visual()
   -- clear visual
@@ -116,19 +120,23 @@ function AmenGrid:get_visual()
 
   -- illuminate current loop points
   for voice=1,2 do 
-    local s=params:get(voice.."amen_loopstart")
-    local e=params:get(voice.."amen_loopend")
-    local row1,col1=self:pos_to_row_col(s)
-    local row2,col2=self:pos_to_row_col(s)
-    for row=1,8 do
-      for col=1,self.grid_width do
-        if row==row1 and col >= col1 then
-          self.visual[row][col]=10
-        elseif row==row2 and col<=col2 then
-          self.visual[row][col]=10
-        elseif row>row1 and row<row2 then
-          self.visual[row][col]=10
-        end          
+    if string.find(params:get(voice.."amen_file"),".wav") then
+      local s=params:get(voice.."amen_loopstart")
+      local e=params:get(voice.."amen_loopend")
+      local row1,col1=self:num_to_pos(s)
+      local row2,col2=self:num_to_pos(e)
+      for row=1,8 do
+        for col=1,8 do
+          if (row==row1 and col >= col1 and col <=col2 and row1==row2) 
+            or (row==row1  and col >= col1 and row1~=row2)
+            or (row==row2  and col <=col2 and row1~=row2)
+            or (row>row1 and row<row2) then
+            self.visual[row][col+(voice-1)*8] = self.visual[row][col+(voice-1)] -1
+            if self.visual[row][col+(voice-1)*8] < 2 then
+              self.visual[row][col+(voice-1)*8]=2
+            end
+          end          
+        end
       end
     end
   end
@@ -136,30 +144,34 @@ function AmenGrid:get_visual()
 
   -- illuminate current position
   for voice=1,2 do 
-    local row,col=self:pos_to_row_col(self.amen.voice[voice].sc_pos)
-    self.visual[row][col]=12
+    if params:get(voice.."amen_play")==1 and self.amen.voice[voice].sc_pos >= 0 and self.amen.voice[voice].sc_pos <= 1 then
+      local row,col=self:num_to_pos(self.amen.voice[voice].sc_pos)
+      if row~=nil and col~=nil then
+        self.visual[row][col+(voice-1)*8]=12
+      end
+    end
   end
 
    -- illuminate currently pressed button
   for k,_ in pairs(self.pressed_buttons) do
-    row,col=k:match("(%d+),(%d+)")
+    local row,col=k:match("(%d+),(%d+)")
     self.visual[tonumber(row)][tonumber(col)]=15
   end
 
   return self.visual
 end
 
-function AmenGrid:pos_to_row_col(pos)
-  local row=math.floor((pos-1)/3)+1
-  local col=pos-(row-1)*3+1
-  return row,col
-end
-
-
 function AmenGrid:num_to_pos(num)
   -- convert 0-1 to grid between row,col [1,1] and [6,8]
-  local row = math.floor(num*48/8)
+  if num ==0 then 
+    return 1,1
+  elseif num==1 then
+    return 6,8
+  end
+  local row = math.floor(num*48/8)+1
   local col = 48*num-8*(row-1)
+  row = math.floor(row)
+  col = math.floor(col)+1
   return row,col
 end
 
