@@ -142,11 +142,11 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
-  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats"}
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window"}
   local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",39*2+3)
+  params:add_group("AMEN",40*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -224,6 +224,7 @@ function Amen:setup_parameters()
         end
       end
     }
+    params:add{type="number",id=i.."amen_sync_per_loop",name="sync per loop",min=1,max=16,default=1}
     params:add {
       type='control',
       id=i.."amen_amp",
@@ -670,8 +671,8 @@ function Amen:emit_note(division,t)
         self.voice[i].hard_reset=false
         self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       end
-      -- TODO: add option to sync every X loops (==0 is one whole loop)
-      if t/32%(self.voice[i].beats*2)==0 then
+      -- add option to sync every X loops (==0 is one whole loop)
+      if t/32%(self.voice[i].beats*2/params:get(i.."amen_sync_per_loop"))==0 then
         -- reset to get back in sync
         print("reseting: amenreset")
         engine.amenreset(i)
