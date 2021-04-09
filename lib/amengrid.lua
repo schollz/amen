@@ -201,6 +201,29 @@ function AmenGrid:get_visual()
     end
   end
 
+  -- illuminate effects
+  for voice=1,2 do
+    for row=7,8 do
+      for col=1,8 do
+        if self.breaker.keys[row]~=nil and self.breaker.keys[row][col]~=nil then
+          local name=self.breaker.keys[row][col].name
+          local p=self.breaker.params[name]
+          local val=false
+          if name=="stop" then
+            val=params:get(voice.."play")==0
+          elseif name=="start" then
+            val=params:get(voice.."play")==1
+          elseif p~=nil then
+            val=params:get(voice..p)==1
+          end
+	  if val then
+		self.visual[row][col+(voice-1)*8]=15
+	  end
+        end
+      end
+    end
+  end
+
   -- illuminate currently pressed button
   for k,_ in pairs(self.pressed_buttons) do
     local row,col=k:match("(%d+),(%d+)")
