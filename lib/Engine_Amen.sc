@@ -47,7 +47,7 @@ Engine_Amen : CroneEngine {
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
                 bitcrush=0,bitcrush_bits=24,bitcrush_rate=44100,
                 scratch=0,strobe=0,vinyl=0,
-                pan=0,lpf=20000,lpflag=0,hpf=10;
+                pan=0,lpf=20000,lpflag=0,hpf=10,hpflag=0;
     
                 // vars
                 var snd,pos;
@@ -68,7 +68,7 @@ Engine_Amen : CroneEngine {
                     interpolation:1
                 );
                 snd = LPF.ar(snd,Lag.kr(lpf,lpflag));
-                snd = HPF.ar(snd,hpf);
+                snd = HPF.ar(snd,Lag.kr(hpf,hpflag));
                 // strobe
                 snd = ((strobe<1)*snd)+((strobe>0)*snd*LFPulse.ar(60/bpm_target*16));
                 // bitcrush
@@ -285,13 +285,15 @@ Engine_Amen : CroneEngine {
             );
         });
 
-        this.addCommand("amenhpf","if", { arg msg;
+        this.addCommand("amenhpf","iff", { arg msg;
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
                 \hpf,msg[2],
+                \hpflag,msg[3],
             );
             playerAmen[msg[1]+1].set(
                 \hpf,msg[2],
+                \hpflag,msg[3],
             );
         });
 
