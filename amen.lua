@@ -50,10 +50,12 @@ local breaker_select=1
 local breaker_options={
   {"stop","start"},
   {"scratch","loop"},
-  {"reverse","jump"},
-  {"slow","lpf"},
   {"stutter","strobe"},
+  {"reverse","jump"},
+  {"lpf","hpf"},
+  {"slow","vinyl"},
   {"bitcrush",""},
+  {"timestretch",""},
 }
 local breaker_option_params={
   bitcrush="amen_bitcrush",
@@ -65,10 +67,13 @@ local breaker_option_params={
   jump="amen_jump",
   slow="amen_tapestop",
   lpf="amen_lpf_effect",
+  hpf="amen_hpf_effect",
   stutter="amen_stutter",
+  timestretch="amen_timestretch",
 }
 local breaker_option_controls={
   bitcrush={"amen_bitcrush_bits","amen_bitcrush_samplerate"},
+  timestretch={"amen_timestretch_slow","amen_timestretch_window"},
 }
 -- WAVEFORMS
 local waveform_samples={{}}
@@ -348,6 +353,8 @@ function key(k,z)
         params:set(voice.."amen_play",0)
       elseif sel=="lpf" then
         params:set(voice.."amen_lpf_effect",z)
+      elseif sel=="hpf" then
+        params:set(voice.."amen_hpf_effect",z)
       elseif sel=="stutter" then
         params:set(voice.."amen_stutter",z)
       elseif sel=="strobe" and z==1 then
@@ -356,6 +363,8 @@ function key(k,z)
         params:delta(voice.."amen_bitcrush",1)
       elseif sel=="vinyl" and z==1 then
         params:delta(voice.."amen_vinyl",1)
+      elseif sel=="timestretch" and z==1 then
+        params:delta(voice.."amen_timestretch",1)
       end
     end
   else
@@ -467,8 +476,8 @@ function redraw()
         end
         -- if it has controls, show them
         if breaker_option_controls[sel]~=nil then
-          local s = params:get(voice..breaker_option_controls[sel][1])
-          s = s.." / "..params:get(voice..breaker_option_controls[sel][2])
+          local s=params:get(voice..breaker_option_controls[sel][1])
+          s=s.." / "..params:get(voice..breaker_option_controls[sel][2])
           box_text(70+41,1,s)
         end
       end

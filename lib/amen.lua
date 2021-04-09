@@ -146,7 +146,7 @@ function Amen:setup_parameters()
   local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",35*2+3)
+  params:add_group("AMEN",39*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -571,6 +571,39 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
     params:add{
+      type='binary',
+      name="timestretch",
+      id=i..'amen_timestretch',
+      behavior='toggle',
+      action=function(v)
+        self:timestretch()
+      end
+    }
+    params:add {
+      type='control',
+      name='timestretch slow',
+      id=i..'amen_timestretch_slow',
+      controlspec=controlspec.new(1,16,'lin',0,2,'x',0.25/(16-1)),
+      action=function(v)
+        self:timestretch()
+      end
+    }
+    params:add {
+      type='control',
+      name='timestretch window',
+      id=i..'amen_timestretch_window',
+      controlspec=controlspec.new(0.125,16,'lin',0,2,'beats',0.125/(16-0.125)),
+      action=function(v)
+        self:timestretch()
+      end
+    }
+    params:add {
+      type='control',
+      name='timestretch prob',
+      id=i..'amen_timestretch_prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
+    params:add{
       type='control',
       name='expand/jump',
       id=i..'amen_expandjump',
@@ -607,6 +640,14 @@ function Amen:bitcrush()
     params:get(i.."amen_bitcrush"),
     params:get(i.."amen_bitcrush_bits"),
     params:get(i.."amen_bitcrush_samplerate"),
+  )
+end
+
+function Amen:timestretch()
+  engine.amenbitcrush(i,
+    params:get(i.."amen_timestretch"),
+    params:get(i.."amen_timestretch_slow"),
+    params:get(i.."amen_timestretch_window"),
   )
 end
 
@@ -728,6 +769,13 @@ function Amen:emit_note(division,t)
         clock.run(function()
           clock.sleep(math.random(100,3000)/1000)
           params:set(i.."amen_bitcrush",0)
+        end)
+      end
+      if params:get(i.."amen_timestretch_prob")/100/8>math.random() then
+        params:set(i.."amen_timestretch",1)
+        clock.run(function()
+          clock.sleep(math.random(100,3000)/1000)
+          params:set(i.."amen_timestretch",0)
         end)
       end
     end
