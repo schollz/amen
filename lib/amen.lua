@@ -122,17 +122,17 @@ function Amen:setup_midi()
         if msg.type=='start' or msg.type=='continue' then
           print(name.." starting clock")
           for i=1,2 do
-                local fname= params:get(i.."amen_file")
-                if fname:sub(-#ending)==ending then
-                params:set(i.."amen_play",1)
-                end
+            local fname=params:get(i.."amen_file")
+            if fname:sub(-#ending)==ending then
+              params:set(i.."amen_play",1)
+            end
           end
         elseif msg.type=="stop" then
           for i=1,2 do
-                local fname= params:get(i.."amen_file")
-                if fname:sub(-#ending)==ending then
-                params:set(i.."amen_play",0)
-                end
+            local fname=params:get(i.."amen_file")
+            if fname:sub(-#ending)==ending then
+              params:set(i.."amen_play",0)
+            end
           end
         end
       end
@@ -142,7 +142,7 @@ end
 
 function Amen:setup_parameters()
   self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend"}
-      local ending=".wav"
+  local ending=".wav"
   -- add parameters
 
   params:add_group("AMEN",31*2+3)
@@ -168,10 +168,10 @@ function Amen:setup_parameters()
       end
     end
     _menu.rebuild_params()
-    local fname= params:get(v.."amen_file")
-      if fname:sub(-#ending)==ending then
+    local fname=params:get(v.."amen_file")
+    if fname:sub(-#ending)==ending then
       self.voice_loaded=v
-      end
+    end
   end}
   for i=1,2 do
     params:add_file(i.."amen_file","load file",_path.audio.."amen/")
@@ -293,7 +293,7 @@ function Amen:setup_parameters()
         self.debounce_loopend=clock.run(function()
           clock.sync(1)
           self.voice[i].beats=util.round(self.voice[i].beats_loaded*(v-params:get(i.."amen_loopstart")))
-          if self.voice[i].beats < 1 then
+          if self.voice[i].beats<1 then
             self.voice[i].beats=1
           end
           if params:get(i.."amen_quantize_loopend")==2 then
@@ -522,13 +522,13 @@ function Amen:setup_parameters()
       type='control',
       name='expand/jump',
       id=i..'amen_expandjump',
-      controlspec=controlspec.new(0,1,'lin',0,0,'%',0.001/1),  
+      controlspec=controlspec.new(0,1,'lin',0,0,'%',0.001/1),
       action=function(v)
         -- if outside the loop, then set the loop
         -- if inside the loop then jump
-        if v < params:get(i.."amen_loopstart") then
+        if v<params:get(i.."amen_loopstart") then
           params:set(i.."amen_loopstart",v)
-        elseif v > params:get(i.."amen_loopend") then
+        elseif v>params:get(i.."amen_loopend") then
           params:set(i.."amen_loopend",v)
         else
           self:effect_jump(i,v)

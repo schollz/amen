@@ -64,41 +64,41 @@ end
 
 function AmenGrid:expandjump(row,col)
   local voice=1
-  if col > 8 then 
-    voice = 2
-    col = col - 8
+  if col>8 then
+    voice=2
+    col=col-8
   end
 
   local val1=nil
   local val2=nil
   for k,_ in pairs(self.pressed_buttons) do
-    row,col=k:match("(%d+),(%d+)")   
+    row,col=k:match("(%d+),(%d+)")
     row=tonumber(row)
-    col=tonumber(col) 
-    local val =  ((row-1)*8+(col-1))/47
-    if voice==2 then 
-      val = ((row-1)*8+(col-9))/47
+    col=tonumber(col)
+    local val=((row-1)*8+(col-1))/47
+    if voice==2 then
+      val=((row-1)*8+(col-9))/47
     end
     if voice==1 and row<7 and col<9 then
-      if val1==nil then 
+      if val1==nil then
         val1=val
       else
         val2=val
       end
     elseif voice==2 and row<7 and col>8 then
-      if val1==nil then 
+      if val1==nil then
         val1=val
       else
         val2=val
       end
     end
   end
-  if val2 ~= nil and val2<val1 then 
-    local val = val1
+  if val2~=nil and val2<val1 then
+    local val=val1
     val1=val2
     val2=val
   end
-  if val2 ~= nil then 
+  if val2~=nil then
     params:set(voice.."amen_loopend",val2)
     params:set(voice.."amen_loopstart",val1)
   else
@@ -112,14 +112,14 @@ function AmenGrid:get_visual()
   for row=1,8 do
     for col=1,self.grid_width do
       self.visual[row][col]=self.visual[row][col]-1
-      if self.visual[row][col] < 0 then 
+      if self.visual[row][col]<0 then
         self.visual[row][col]=0
       end
     end
   end
 
   -- illuminate current loop points
-  for voice=1,2 do 
+  for voice=1,2 do
     if string.find(params:get(voice.."amen_file"),".wav") then
       local s=params:get(voice.."amen_loopstart")
       local e=params:get(voice.."amen_loopend")
@@ -127,15 +127,15 @@ function AmenGrid:get_visual()
       local row2,col2=self:num_to_pos(e)
       for row=1,8 do
         for col=1,8 do
-          if (row==row1 and col >= col1 and col <=col2 and row1==row2) 
-            or (row==row1  and col >= col1 and row1~=row2)
-            or (row==row2  and col <=col2 and row1~=row2)
+          if (row==row1 and col>=col1 and col<=col2 and row1==row2)
+            or (row==row1 and col>=col1 and row1~=row2)
+            or (row==row2 and col<=col2 and row1~=row2)
             or (row>row1 and row<row2) then
-            self.visual[row][col+(voice-1)*8] = self.visual[row][col+(voice-1)] -1
-            if self.visual[row][col+(voice-1)*8] < 2 then
+            self.visual[row][col+(voice-1)*8]=self.visual[row][col+(voice-1)]-1
+            if self.visual[row][col+(voice-1)*8]<2 then
               self.visual[row][col+(voice-1)*8]=2
             end
-          end          
+          end
         end
       end
     end
@@ -143,8 +143,8 @@ function AmenGrid:get_visual()
 
 
   -- illuminate current position
-  for voice=1,2 do 
-    if params:get(voice.."amen_play")==1 and self.amen.voice[voice].sc_pos >= 0 and self.amen.voice[voice].sc_pos <= 1 then
+  for voice=1,2 do
+    if params:get(voice.."amen_play")==1 and self.amen.voice[voice].sc_pos>=0 and self.amen.voice[voice].sc_pos<=1 then
       local row,col=self:num_to_pos(self.amen.voice[voice].sc_pos)
       if row~=nil and col~=nil then
         self.visual[row][col+(voice-1)*8]=12
@@ -152,7 +152,7 @@ function AmenGrid:get_visual()
     end
   end
 
-   -- illuminate currently pressed button
+  -- illuminate currently pressed button
   for k,_ in pairs(self.pressed_buttons) do
     local row,col=k:match("(%d+),(%d+)")
     self.visual[tonumber(row)][tonumber(col)]=15
@@ -163,15 +163,15 @@ end
 
 function AmenGrid:num_to_pos(num)
   -- convert 0-1 to grid between row,col [1,1] and [6,8]
-  if num ==0 then 
+  if num==0 then
     return 1,1
   elseif num==1 then
     return 6,8
   end
-  local row = math.floor(num*48/8)+1
-  local col = 48*num-8*(row-1)
-  row = math.floor(row)
-  col = math.floor(col)+1
+  local row=math.floor(num*48/8)+1
+  local col=48*num-8*(row-1)
+  row=math.floor(row)
+  col=math.floor(col)+1
   return row,col
 end
 
