@@ -142,11 +142,11 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
-  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window"}
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window","amen_rate"}
   local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",40*2+3)
+  params:add_group("AMEN",41*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -242,6 +242,15 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(-1,1,'lin',0,0),
       action=function(v)
         engine.amenpan(i,v)
+      end
+    }
+    params:add {
+      type='control',
+      id=i.."amen_rate",
+      name="rate",
+      controlspec=controlspec.new(-4,4,'lin',0,1,0.01/4),
+      action=function(v)
+        engine.amenrate(i,v,0.2)
       end
     }
     params:add {

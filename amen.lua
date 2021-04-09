@@ -50,6 +50,7 @@ breaker.update=false
 breaker.sel=1
 breaker.options={
   {"stop","start"},
+  {"loop",""}
   {"scratch","loop"},
   {"stutter","strobe"},
   {"reverse","jump"},
@@ -75,6 +76,7 @@ breaker.params={
 breaker.controls={
   bitcrush={{param="amen_bitcrush_bits",post="bits"},{param="amen_bitcrush_samplerate",post="Hz"}},
   timestretch={{param="amen_timestretch_slow",pre="slow",post="x"},{param="amen_timestretch_window",pre="1/",post="beats"}},
+  loop={{param="amen_loop_beats",post="beats"},{param="amen_rate",pre="rate ",post="x"},
 }
 
 -- WAVEFORMS
