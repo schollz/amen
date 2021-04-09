@@ -666,16 +666,18 @@ function Amen:emit_note(division,t)
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       print(t/32%(self.voice[i].beats*2))
       self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
+      local loopPos=self.voice[i].beat/self.voice[i].beats_loaded
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
-        self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
+        self:loop(i,loopPos)
       end
       -- add option to sync every X loops (==0 is one whole loop)
-      if t/32%(self.voice[i].beats*2/params:get(i.."amen_sync_per_loop"))==0 then
+      if t/32%math.ceil(self.voice[i].beats_loaded*2/params:get(i.."amen_sync_per_loop"))==0 then
         -- reset to get back in sync
-        print("reseting: amenreset")
-        engine.amenreset(i)
+        print("syncing loop")
+	self:loop(i,loopPos)
+        --engine.amenreset(i)
       end
     end
   end
