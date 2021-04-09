@@ -316,10 +316,10 @@ function Amen:setup_parameters()
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local pos = self:current_pos(i)
+          local pos=self:current_pos(i)
           local s=pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
-          if s < 0 then
-            s = s + params:get(i.."amen_loopend")
+          if s<0 then
+            s=s+params:get(i.."amen_loopend")
           end
           local e=pos+0.001
           engine.amenloopnt(i,s,s,e)
@@ -571,15 +571,15 @@ function Amen:setup_parameters()
     }
   end
 
-    for _,param_name in ipairs(self.param_names) do
-      for i=1,2 do
-        if i==1 then
-          params:show(i..param_name)
-        else
-          params:hide(i..param_name)
-        end
+  for _,param_name in ipairs(self.param_names) do
+    for i=1,2 do
+      if i==1 then
+        params:show(i..param_name)
+      else
+        params:hide(i..param_name)
       end
     end
+  end
 
 end
 
