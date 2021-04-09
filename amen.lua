@@ -53,7 +53,7 @@ local breaker_options={
   {"reverse","jump"},
   {"slow","lpf"},
   {"stutter","strobe"},
-  {"bitcrush","vinyl"},
+  {"bitcrush",""},
 }
 local breaker_option_params={
   bitcrush="amen_bitcrush",
@@ -66,6 +66,9 @@ local breaker_option_params={
   slow="amen_tapestop",
   lpf="amen_lpf_effect",
   stutter="amen_stutter",
+}
+local breaker_option_controls={
+  bitcrush={"amen_bitcrush_bits","amen_bitcrush_samplerate"},
 }
 -- WAVEFORMS
 local waveform_samples={{}}
@@ -288,27 +291,31 @@ function enc(k,d)
   else
     if k==1 then
       breaker_select=util.wrap(breaker_select+sign(d),1,#breaker_options)
-    elseif k==2 then
-      if not set_effect_probability(k,d) then
-        params:delta(voice.."amen_loopstart",d)
-      end
-    elseif k==3 then
-      if not set_effect_probability(k,d) then
-        params:delta(voice.."amen_loopend",d)
-      end
+    else
+      dial_effect(k,d)
     end
   end
 end
 
-function set_effect_probability(k,d)
-  -- update the breaker percentage
-  local sel=breaker_options[breaker_select][k-1]
-  if breaker_option_params[sel]==nil then
-    do return false end
+function dial_effect(k,d)
+  local sel1=breaker_options[breaker_select][1]
+  if sel1=="stop" then
+    -- update the loop stop/start positions
+    if k==2 then
+      params:delta(voice.."amen_loopend",d)
+    else
+      params:delta(voice.."amen_loopend",d)
+    end
+  elseif breaker_option_controls[sel1]~=nil then
+    -- this effect has breakout controls, update those
+    params:delta(voice..breaker_option_controls[sel1][k-1],d)
+  else
+    -- update the probability percentage
+    local sel=breaker_options[breaker_select][k-1]
+    if breaker_option_params[sel]~=nil then
+      params:delta(voice..breaker_option_params[sel].."_prob",d)
+    end
   end
-  print(sel,breaker_option_params[sel])
-  params:delta(voice..breaker_option_params[sel].."_prob",d)
-  return true
 end
 
 function key(k,z)
@@ -442,19 +449,28 @@ function redraw()
     screen.text(math.floor(amen.voice[voice].beat+1).."/"..amen.voice[voice].beats)
     for i=1,2 do
       local keyon=keyson[i]
-      local p=breaker_option_params[breaker_options[breaker_select][i]]
-      if p~=nil then
-        keyon=params:get(voice..p)==1
-      end
-      x,y,w=box_text(70+41*(i-1),1,breaker_options[breaker_select][i],keyon)
-      if p~=nil then
-        -- show prob in a line below the box
-        screen.move(x,y+11)
-        screen.line(x+w*params:get(voice..p.."_prob")/100,y+11)
-        screen.stroke()
-        screen.move(x,y+12)
-        screen.line(x+w*params:get(voice..p.."_prob")/100,y+12)
-        screen.stroke()
+      local sel=breaker_options[breaker_select][i]
+      if sel~="" then
+        local p=breaker_option_params[sel]
+        if p~=nil then
+          keyon=params:get(voice..p)==1
+        end
+        x,y,w=box_text(70+41*(i-1),1,sel,keyon)
+        if p~=nil then
+          -- show prob in a line below the box
+          screen.move(x,y+11)
+          screen.line(x+w*params:get(voice..p.."_prob")/100,y+11)
+          screen.stroke()
+          screen.move(x,y+12)
+          screen.line(x+w*params:get(voice..p.."_prob")/100,y+12)
+          screen.stroke()
+        end
+        -- if it has controls, show them
+        if breaker_option_controls[sel]~=nil then
+          local s = params:get(voice..breaker_option_controls[sel][1])
+          s = s.." / "..params:get(voice..breaker_option_controls[sel][2])
+          box_text(70+41,1,s)
+        end
       end
     end
   else

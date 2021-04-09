@@ -604,9 +604,9 @@ end
 
 function Amen:bitcrush()
   engine.amenbitcrush(i,
-      params:get(i.."amen_bitcrush"),
-      params:get(i.."amen_bitcrush_bits"),
-      params:get(i.."amen_bitcrush_samplerate"),
+    params:get(i.."amen_bitcrush"),
+    params:get(i.."amen_bitcrush_bits"),
+    params:get(i.."amen_bitcrush_samplerate"),
   )
 end
 
