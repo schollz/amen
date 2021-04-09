@@ -564,7 +564,8 @@ function Amen:setup_parameters()
         elseif v>params:get(i.."amen_loopend") then
           params:set(i.."amen_loopend",v)
         else
-          self:effect_jump(i,v)
+          -- self:effect_jump(i,v)
+          self:loop(i,v)
         end
       end
     }
