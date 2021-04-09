@@ -6,6 +6,7 @@ function AmenGrid:new(args)
   local m=setmetatable({},{__index=AmenGrid})
   local args=args==nil and {} or args
   m.amen=args.amen -- A REQUIRED ARG
+  m.breaker=args.breaker -- A REQUIRED ARG
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
   -- initiate the grid
