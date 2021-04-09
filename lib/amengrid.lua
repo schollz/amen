@@ -9,6 +9,26 @@ function AmenGrid:new(args)
   m.breaker=args.breaker -- A REQUIRED ARG
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
+  -- determine the breaker keys
+  breaker.keys={}
+  local row=6
+  local col=1
+  for sel,option in ipairs(breaker.options) do
+    for j=1,2 do
+      if option[j]~="" then
+        if breaker.keys[row]==nil then
+          breaker.keys[row]={}
+        end
+        breaker.keys[row][col]={name=option[j],sel=sel}
+        col=col+1
+        if col>8 then
+          row=row+1
+          col=1
+        end
+      end
+    end
+  end
+
   -- initiate the grid
   m.g=grid.connect()
   m.g.key=function(x,y,z)
@@ -60,6 +80,34 @@ function AmenGrid:key_press(row,col,on)
   if row<7 and on then
     -- change position
     self:expandjump(row,col)
+  else
+    self:press_breaker(row,col)
+  end
+end
+
+function AmenGrid:press_breaker(row,col)
+  local voice=1
+  if col>8 then
+    voice=2
+    col=col-8
+  end
+
+  if self.breaker.keys[row]==nil then
+    do return end
+  end
+  if self.breaker.keys[row][col]==nil then
+    do return end
+  end
+  local name=self.breaker.keys[row][col].name
+  self.breaker.sel=self.breaker.keys[row][col].sel -- TODO check whether this actually works? pass by reference should work here
+  if name=="stop" then
+    params:set(voice.."play",0)
+  elseif name=="start" then
+    params:set(voice.."play",1)
+  elseif breaker.params[name]~="" then
+    params:delta(voice..breaker.params[name],1)
+  else
+    print("amengrid: unknown param name: "..name)
   end
 end
 

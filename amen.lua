@@ -82,25 +82,6 @@ local waveform_samples={{}}
 engine.name="Amen"
 
 function init()
-  breaker.keys={}
-  local row=6
-  local col=1
-  for i,option in ipairs(breaker.options) do
-    for j=1,2 do
-      if option[j]~="" then
-        if breaker.keys[row]==nil then
-          breaker.keys[row]={}
-        end
-        breaker.keys[row][col]=option[j]
-        col=col+1
-        if col>8 then
-          row=row+1
-          col=1
-        end
-      end
-    end
-  end
-
   amen=amenbreaks:new()
   ameng=amengrid:new({amen=amen,breaker=breaker})
 
