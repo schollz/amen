@@ -216,9 +216,9 @@ function AmenGrid:get_visual()
           elseif p~=nil then
             val=params:get(voice..p)==1
           end
-	  if val then
-		self.visual[row][col+(voice-1)*8]=15
-	  end
+          if val then
+            self.visual[row][col+(voice-1)*8]=15
+          end
         end
       end
     end
