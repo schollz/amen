@@ -670,6 +670,7 @@ function Amen:emit_note(division,t)
         self.voice[i].hard_reset=false
         self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       end
+      -- TODO: add option to sync every X loops (==0 is one whole loop)
       if t/32%(self.voice[i].beats*2)==0 then
         -- reset to get back in sync
         print("reseting: amenreset")
