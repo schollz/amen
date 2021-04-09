@@ -146,7 +146,7 @@ function Amen:setup_parameters()
   local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",33*2+3)
+  params:add_group("AMEN",35*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -547,6 +547,25 @@ function Amen:setup_parameters()
     }
     params:add {
       type='control',
+      name='bitcrush bits',
+      id=i..'amen_bitcrush_bits',
+      controlspec=controlspec.new(6,24,'lin',0,12,'bits',1/(24-6)),
+      action=function(v)
+        self:bitcrush()
+      end
+    }
+    params:add {
+      type='control',
+      name='bitcrush samplerate',
+      id=i..'amen_bitcrush_samplerate',
+      controlspec=controlspec.new(20,20000,'exp',0,4000,'Hz'),
+      formatter=Formatters.format_freq,
+      action=function(v)
+        self:bitcrush()
+      end
+    }
+    params:add {
+      type='control',
       name='bitcrush prob',
       id=i..'amen_bitcrush_prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
@@ -581,6 +600,14 @@ function Amen:setup_parameters()
     end
   end
 
+end
+
+function Amen:bitcrush()
+  engine.amenbitcrush(i,
+      params:get(i.."amen_bitcrush"),
+      params:get(i.."amen_bitcrush_bits"),
+      params:get(i.."amen_bitcrush_samplerate"),
+  )
 end
 
 function Amen:loop(i,pos,s,e)
@@ -774,7 +801,7 @@ function Amen:process_queue(i,q)
   elseif q[1]==TYPE_BITCRUSH then
     print("TYPE_BITCRUSH "..q[2])
     if q[2]==1 then
-      engine.amenbitcrush(i,1,12,1500)
+      self:bitcrush()
     else
       engine.amenbitcrush(i,0,24,20000)
     end
