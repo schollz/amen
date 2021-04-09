@@ -676,7 +676,7 @@ function Amen:emit_note(division,t)
       if t/32%math.ceil(self.voice[i].beats_loaded*2/params:get(i.."amen_sync_per_loop"))==0 then
         -- reset to get back in sync
         print("syncing loop")
-	self:loop(i,loopPos)
+        self:loop(i,loopPos)
         --engine.amenreset(i)
       end
     end
