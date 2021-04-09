@@ -50,12 +50,12 @@ breaker.update=false
 breaker.sel=1
 breaker.options={
   {"stop","start"},
-  {"loop",""}
   {"scratch","loop"},
   {"stutter","strobe"},
   {"reverse","jump"},
   {"lpf","hpf"},
   {"slow","vinyl"},
+  {"loop",""}
   {"bitcrush",""},
   {"timestretch",""},
 }
