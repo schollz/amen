@@ -1,6 +1,7 @@
 format: lua-format.py
 	python3 lua-format.py amen.lua
 	python3 lua-format.py lib/amen.lua
+	python3 lua-format.py lib/amengrid.lua
 # 	git commit -am "formatted"
 # 	git diff HEAD^
 

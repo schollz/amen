@@ -48,10 +48,12 @@ in this mode you can playback the current loop with all sorts of punch-in effect
 - jumps
 - slow / tape stop
 - low-pass filter
+- high-pass filter
 - stutter
 - strobe / tremelo
 - bitcrush
 - vinyl / lofi
+- timestretching
 
 **unquantized vs quantized loop lengths**: when you see "stop" and "start" you can change the loop lengths manually with e2 and e3. e2 changes the start position and e3 changes the end position. however, its important to note that when you change e2 you are making fine adjustments without quantizing loop length. conversely, when you change e3 it will force the loop to now snap to the nearest beat. so if don't want to snap to a beat, set e2 last, or conversely if you do want to snap to a beat, use e3 after adjusting e2. the beat sync will still be quantized in both cases, but it can be interesting to have (or not have) a quantized loop length.
 

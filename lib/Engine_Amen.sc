@@ -42,15 +42,16 @@ Engine_Amen : CroneEngine {
         // two players per buffer (4 players total)
         (0..4).do({arg i; 
             SynthDef("playerAmen"++i,{ 
-                arg bufnum, amp=0, t_trig=0, amp_crossfade=0,
+                arg bufnum, amp=0, t_trig=0,t_trigtime=0, amp_crossfade=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
                 bitcrush=0,bitcrush_bits=24,bitcrush_rate=44100,
                 scratch=0,strobe=0,vinyl=0,
-                pan=0,lpf=20000,lpflag=0,hpf=10;
+                timestretch=0,timestretchSlowDown=1,timestretchWindowBeats=1,
+                pan=0,lpf=20000,lpflag=0,hpf=10,hpflag=0;
     
                 // vars
-                var snd,pos;
+                var snd,pos,timestretchPos,timestretchWindow;
                 rate = Lag.kr(rate,rateSlew);
                 rate = rate * bpm_target / bpm_sample;
                 // scratch effect
@@ -63,12 +64,34 @@ Engine_Amen : CroneEngine {
                     end:((sampleEnd*(rate>0))+(sampleStart*(rate<0)))*BufFrames.kr(bufnum),
                     resetPos:samplePos*BufFrames.kr(bufnum)
                 );
+                timestretchPos = Phasor.ar(
+                    trig:t_trigtime,
+                    rate:BufRateScale.kr(bufnum)*rate/timestretchSlowDown,
+                    start:((sampleStart*(rate>0))+(sampleEnd*(rate<0)))*BufFrames.kr(bufnum),
+                    end:((sampleEnd*(rate>0))+(sampleStart*(rate<0)))*BufFrames.kr(bufnum),
+                    resetPos:pos
+                );
+                timestretchWindow = Phasor.ar(
+                    trig:t_trig,
+                    rate:BufRateScale.kr(bufnum)*rate,
+                    start:timestretchPos,
+                    end:timestretchPos+((60/bpm_target/timestretchWindowBeats)/BufDur.kr(bufnum)*BufFrames.kr(bufnum)),
+                    resetPos:timestretchPos,
+                );
+
                 snd=BufRd.ar(2,bufnum,pos,
                     loop:1,
                     interpolation:1
                 );
+                timestretch=Lag.kr(timestretch,2);
+                snd=((1-timestretch)*snd)+(timestretch*BufRd.ar(2,bufnum,
+                    timestretchWindow,
+                    loop:1,
+                    interpolation:1
+                ));
+
                 snd = LPF.ar(snd,Lag.kr(lpf,lpflag));
-                snd = HPF.ar(snd,hpf);
+                snd = HPF.ar(snd,Lag.kr(hpf,hpflag));
                 // strobe
                 snd = ((strobe<1)*snd)+((strobe>0)*snd*LFPulse.ar(60/bpm_target*16));
                 // bitcrush
@@ -85,7 +108,7 @@ Engine_Amen : CroneEngine {
                     level:amp*Lag.kr(amp_crossfade,0.2)
                 );
 
-                SendTrig.kr(Impulse.kr(30),i,A2K.kr(pos)/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
+                SendTrig.kr(Impulse.kr(30),i,A2K.kr(((1-timestretch)*pos)+(timestretch*timestretchPos))/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
 
                 Out.ar(0,snd)
             }).add; 
@@ -285,13 +308,15 @@ Engine_Amen : CroneEngine {
             );
         });
 
-        this.addCommand("amenhpf","if", { arg msg;
+        this.addCommand("amenhpf","iff", { arg msg;
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
                 \hpf,msg[2],
+                \hpflag,msg[3],
             );
             playerAmen[msg[1]+1].set(
                 \hpf,msg[2],
+                \hpflag,msg[3],
             );
         });
 
@@ -341,6 +366,23 @@ Engine_Amen : CroneEngine {
                 \bitcrush,msg[2],
                 \bitcrush_bits,msg[3],
                 \bitcrush_rate,msg[4],
+            );
+        });
+
+        
+        this.addCommand("amentimestretch","iffff", { arg msg;
+            // lua is sending 1-index
+            playerAmen[msg[1]-1].set(
+                \t_trigtime,msg[2],
+                \timestretch,msg[3],
+                \timestretchSlowDown,msg[4],
+                \timestretchWindowBeats,msg[5],
+            );
+            playerAmen[msg[1]+1].set(
+                \t_trigtime,msg[2],
+                \timestretch,msg[3],
+                \timestretchSlowDown,msg[4],
+                \timestretchWindowBeats,msg[5],
             );
         });
 
