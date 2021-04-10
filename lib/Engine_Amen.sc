@@ -119,30 +119,13 @@ Engine_Amen : CroneEngine {
             arg msg, time; 
                 // [time, msg].postln;
             // voice "1" uses voices 0 and 2 in sc
-            if (msg[2]==0, {
-                if (playerSwap[0]==0, {
-                    NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
-                },{});
-            },{
-                if (msg[2]==2, {
-                if (playerSwap[0]==1, {
-                    NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
-                },{});
-                },{
-                    // voice "2" uses voices 1 and 3 in sc
-                    if (msg[2]==1, {
-                    if (playerSwap[1]==0, {
-                        NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);   //sendMsg works out the correct OSC message for you
-                    },{});
-                    },{
-                        if (msg[2]==3, {
-                        if (playerSwap[1]==1, {
-                            NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);   //sendMsg works out the correct OSC message for you
-                        },{});
-                        },{});
-                    });
-                });
-            });
+            if (((msg[2]==0)&&(playerSwap[0]==0))||((msg[2]==2)&&(playerSwap[0]==1)), {
+                NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);  
+            },{});
+
+            if (((msg[2]==1)&&(playerSwap[0]==0))||((msg[2]==3)&&(playerSwap[0]==1)), {
+                NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);
+            },{});
 
             // if ((msg[2]==2)*(playerSwap[0]==1), {
             //     NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
