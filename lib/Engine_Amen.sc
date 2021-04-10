@@ -42,7 +42,7 @@ Engine_Amen : CroneEngine {
         // two players per buffer (4 players total)
         (0..4).do({arg i; 
             SynthDef("playerAmen"++i,{ 
-                arg bufnum, amp=0, t_trig=0, amp_crossfade=0,
+                arg bufnum, amp=0, t_trig=0,t_trigtime=0, amp_crossfade=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
                 bitcrush=0,bitcrush_bits=24,bitcrush_rate=44100,
@@ -65,11 +65,11 @@ Engine_Amen : CroneEngine {
                     resetPos:samplePos*BufFrames.kr(bufnum)
                 );
                 timestretchPos = Phasor.ar(
-                    trig:t_trig,
+                    trig:t_trigtime,
                     rate:BufRateScale.kr(bufnum)*rate/timestretchSlowDown,
                     start:((sampleStart*(rate>0))+(sampleEnd*(rate<0)))*BufFrames.kr(bufnum),
                     end:((sampleEnd*(rate>0))+(sampleStart*(rate<0)))*BufFrames.kr(bufnum),
-                    resetPos:((sampleStart*(rate>0))+(sampleEnd*(rate<0)))*BufFrames.kr(bufnum)
+                    resetPos:pos
                 );
                 timestretchWindow = Phasor.ar(
                     trig:t_trig,
@@ -370,17 +370,19 @@ Engine_Amen : CroneEngine {
         });
 
         
-        this.addCommand("amentimestretch","ifff", { arg msg;
+        this.addCommand("amentimestretch","iffff", { arg msg;
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
-                \timestretch,msg[2],
-                \timestretchSlowDown,msg[3],
-                \timestretchWindowBeats,msg[4],
+                \t_trigtime,msg[2],
+                \timestretch,msg[3],
+                \timestretchSlowDown,msg[4],
+                \timestretchWindowBeats,msg[5],
             );
             playerAmen[msg[1]+1].set(
-                \timestretch,msg[2],
-                \timestretchSlowDown,msg[3],
-                \timestretchWindowBeats,msg[4],
+                \t_trigtime,msg[2],
+                \timestretch,msg[3],
+                \timestretchSlowDown,msg[4],
+                \timestretchWindowBeats,msg[5],
             );
         });
 

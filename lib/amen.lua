@@ -141,11 +141,11 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
-  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window","amen_rate","amen_halfspeed","amen_halfspeed_prob"}
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_rate","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window","amen_rate","amen_halfspeed","amen_halfspeed_prob"}
   local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",43*2+3)
+  params:add_group("AMEN",44*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -223,7 +223,7 @@ function Amen:setup_parameters()
         end
       end
     }
-    params:add{type="number",id=i.."amen_sync_per_loop",name="sync per loop",min=1,max=16,default=1}
+    params:add{type="number",id=i.."amen_sync_per_loop",name="sync per loop /4",min=1,max=48,default=4}
     params:add {
       type='control',
       id=i.."amen_amp",
@@ -321,20 +321,22 @@ function Amen:setup_parameters()
       type='binary',
       name="loop",
       id=i..'amen_loop',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print(i.."amen_loop "..v)
         if v==1 then
-          local pos=self:current_pos(i)
-          local s=pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
+          self.voice[i].loop_pos=self:current_pos(i)
+          local s=self.voice[i].loop_pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
           if s<0 then
             s=s+params:get(i.."amen_loopend")
           end
-          local e=pos+0.001
+          local e=self.voice[i].loop_pos+0.001
           engine.amenloopnt(i,s,s,e)
+          engine.amenrate(i,params:get(i.."amen_loop_rate"),0)
           -- self:effect_loop(i,s,e)
           self.voice[i].disable_reset=true
         else
+          engine.amenrate(i,params:get(i.."amen_rate"),0)
           engine.amenloopnt(i,params:get(i.."amen_loopstart"),params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"))
           self.voice[i].hard_reset=true
           self.voice[i].disable_reset=false
@@ -345,7 +347,30 @@ function Amen:setup_parameters()
       type='control',
       id=i..'amen_loop_beats',
       name='loop beats',
-      controlspec=controlspec.new(0.125,8,'lin',0,2,'beats',0.125/(8-0.125)),
+      controlspec=controlspec.new(0.125,8,'lin',0,1,'beats',0.125/(8-0.125)),
+      action=function(v)
+        if params:get(i.."amen_loop")==0 then 
+          do return end
+        end
+ local s=self.voice[i].loop_pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
+          if s<0 then
+            s=s+params:get(i.."amen_loopend")
+          end
+          local e=self.voice[i].loop_pos+0.001
+          engine.amenloopnt(i,s,s,e)
+      end
+    }
+    params:add {
+      type='control',
+      id=i..'amen_loop_rate',
+      name='loop beats',
+      controlspec=controlspec.new(-2,2,'lin',0,1,'',0.01/2),
+      action=function(v)
+        if params:get(i.."amen_loop")==0 then 
+          do return end
+        end
+        engine.amenrate(i,v,0.2)
+      end
     }
     params:add {
       type='control',
@@ -580,7 +605,7 @@ function Amen:setup_parameters()
       id=i..'amen_bitcrush_bits',
       controlspec=controlspec.new(6,24,'lin',0,12,'bits',1/(24-6)),
       action=function(v)
-        self:bitcrush()
+        self:bitcrush(i)
       end
     }
     params:add {
@@ -590,7 +615,7 @@ function Amen:setup_parameters()
       controlspec=controlspec.new(20,20000,'exp',0,4000,'Hz'),
       formatter=Formatters.format_freq,
       action=function(v)
-        self:bitcrush()
+        self:bitcrush(i)
       end
     }
     params:add {
@@ -605,7 +630,7 @@ function Amen:setup_parameters()
       id=i..'amen_timestretch',
       behavior='toggle',
       action=function(v)
-        self:timestretch()
+        self:timestretch(i,true)
       end
     }
     params:add {
@@ -614,7 +639,7 @@ function Amen:setup_parameters()
       id=i..'amen_timestretch_slow',
       controlspec=controlspec.new(1,16,'lin',0,2,'x',0.25/(16-1)),
       action=function(v)
-        self:timestretch()
+        self:timestretch(i)
       end
     }
     params:add {
@@ -623,7 +648,7 @@ function Amen:setup_parameters()
       id=i..'amen_timestretch_window',
       controlspec=controlspec.new(0.125,16,'lin',0,2,'beats',0.125/(16-0.125)),
       action=function(v)
-        self:timestretch()
+        self:timestretch(i)
       end
     }
     params:add {
@@ -664,20 +689,23 @@ function Amen:setup_parameters()
 
 end
 
-function Amen:bitcrush()
+function Amen:bitcrush(i)
   engine.amenbitcrush(i,
     params:get(i.."amen_bitcrush"),
     params:get(i.."amen_bitcrush_bits"),
-    params:get(i.."amen_bitcrush_samplerate"),
-  )
+    params:get(i.."amen_bitcrush_samplerate"))
 end
 
-function Amen:timestretch()
-  engine.amenbitcrush(i,
+function Amen:timestretch(i,on)
+  local val = 0 
+  if on then 
+    val = 1
+  end
+  engine.amentimestretch(i,
+    val,
     params:get(i.."amen_timestretch"),
     params:get(i.."amen_timestretch_slow"),
-    params:get(i.."amen_timestretch_window"),
-  )
+    params:get(i.."amen_timestretch_window"))
 end
 
 function Amen:loop(i,pos,s,e)
@@ -701,7 +729,7 @@ function Amen:emit_note(division,t)
         self:loop(i,loopPos)
       end
       -- add option to sync every X loops (==0 is one whole loop)
-      if t/32%math.ceil(self.voice[i].beats_loaded*2/params:get(i.."amen_sync_per_loop"))==0 then
+      if t/32%math.ceil(self.voice[i].beats*2/(params:get(i.."amen_sync_per_loop")/4))==0 then
         -- reset to get back in sync
         print("syncing loop")
         self:loop(i,loopPos)
@@ -875,7 +903,7 @@ function Amen:process_queue(i,q)
   elseif q[1]==TYPE_BITCRUSH then
     print("TYPE_BITCRUSH "..q[2])
     if q[2]==1 then
-      self:bitcrush()
+      self:bitcrush(i)
     else
       engine.amenbitcrush(i,0,24,20000)
     end

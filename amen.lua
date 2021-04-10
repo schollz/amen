@@ -50,14 +50,14 @@ breaker.update=false
 breaker.sel=1
 breaker.options={
   {"stop","start"},
-  {"scratch","halfspeed"},
+  {"scratch","half"},
   {"stutter","strobe"},
   {"reverse","jump"},
   {"lpf","hpf"},
   {"slow","vinyl"},
-  {"loop",""}
+  {"loop",""},
   {"bitcrush",""},
-  {"timestretch",""},
+  {"stretch",""},
 }
 breaker.params={
   bitcrush="amen_bitcrush",
@@ -71,13 +71,13 @@ breaker.params={
   lpf="amen_lpf_effect",
   hpf="amen_hpf_effect",
   stutter="amen_stutter",
-  timestretch="amen_timestretch",
-  halfspeed="amen_halfspeed",
+  stretch="amen_timestretch",
+  half="amen_halfspeed",
 }
 breaker.controls={
-  bitcrush={{param="amen_bitcrush_bits",post="bits"},{param="amen_bitcrush_samplerate",post="Hz"}},
-  timestretch={{param="amen_timestretch_slow",pre="slow",post="x"},{param="amen_timestretch_window",pre="1/",post="beats"}},
-  loop={{param="amen_loop_beats",post="beats"},{param="amen_rate",pre="rate ",post="x"}},
+  bitcrush={{param="amen_bitcrush_bits",post=""},{param="amen_bitcrush_samplerate",post="hz"}},
+  stretch={{param="amen_timestretch_slow",pre="",post="x"},{param="amen_timestretch_window",pre="1/",post=""}},
+  loop={{param="amen_loop_beats"},{param="amen_loop_rate",pre="",post="x"}},
 }
 
 -- WAVEFORMS
@@ -349,8 +349,8 @@ function key(k,z)
       elseif sel=="jump" and z==1 then
         params:set(voice.."amen_jump",1)
         params:set(voice.."amen_jump",0)
-      elseif sel=="loop" then
-        params:set(voice.."amen_loop",z)
+      elseif sel=="loop" and z==1 then
+        params:delta(voice.."amen_loop",1)
       elseif sel=="start" and z==1 then
         params:set(voice.."amen_play",0)
         params:set(voice.."amen_play",1)
@@ -368,9 +368,9 @@ function key(k,z)
         params:delta(voice.."amen_bitcrush",1)
       elseif sel=="vinyl" and z==1 then
         params:delta(voice.."amen_vinyl",1)
-      elseif sel=="timestretch" and z==1 then
+      elseif sel=="stretch" and z==1 then
         params:delta(voice.."amen_timestretch",1)
-      elseif sel=="halfspeed" and z==1 then
+      elseif sel=="half" and z==1 then
         params:delta(voice.."amen_halfspeed",1)
       end
     end
@@ -471,7 +471,7 @@ function redraw()
         if p~=nil then
           keyon=params:get(voice..p)==1
         end
-        x,y,w=box_text(70+41*(i-1),1,sel,keyon)
+        x,y,w=box_text(55+45*(i-1),1,sel,keyon)
         if p~=nil then
           -- show prob in a line below the box
           screen.move(x,y+11)
@@ -485,12 +485,24 @@ function redraw()
         if breaker.controls[sel]~=nil then
           local s=""
           for j=1,2 do
+            if breaker.controls[sel][j].pre~=nil then
             s=s..breaker.controls[sel][j].pre
-            s=s..params:get(voice..breaker.controls[sel][j].param)
-            s=s..breaker.controls[sel][j].post
-            s=s.."  "
           end
-          box_text(70+41,1,s)
+          local val = params:get(voice..breaker.controls[sel][j].param)
+          if val==math.floor(val) then
+            val = math.floor(val)
+          end
+          if val > 1000 then 
+            val = math.floor(val/1000).."k"
+          end
+
+            s=s..val
+            if breaker.controls[sel][j].post~=nil then
+            s=s..breaker.controls[sel][j].post
+          end
+            s=s.." "
+          end
+          box_text(55+45,1,s)
         end
       end
     end

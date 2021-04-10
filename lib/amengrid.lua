@@ -10,16 +10,16 @@ function AmenGrid:new(args)
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
   -- determine the breaker keys
-  breaker.keys={}
+  m.breaker.keys={}
   local row=6
   local col=1
-  for sel,option in ipairs(breaker.options) do
+  for sel,option in ipairs(m.breaker.options) do
     for j=1,2 do
       if option[j]~="" then
-        if breaker.keys[row]==nil then
-          breaker.keys[row]={}
+        if m.breaker.keys[row]==nil then
+          m.breaker.keys[row]={}
         end
-        breaker.keys[row][col]={name=option[j],sel=sel}
+        m.breaker.keys[row][col]={name=option[j],sel=sel}
         col=col+1
         if col>8 then
           row=row+1
