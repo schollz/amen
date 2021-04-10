@@ -15,7 +15,7 @@ function AmenGrid:new(args)
   local col=1
   for sel,option in ipairs(m.breaker.options) do
     for j=1,2 do
-      if option[j]~="" then
+      if option[j]~="" and option[j]~="stop" then
         if m.breaker.keys[row]==nil then
           m.breaker.keys[row]={}
         end
@@ -98,12 +98,11 @@ function AmenGrid:press_breaker(row,col)
   if self.breaker.keys[row][col]==nil then
     do return end
   end
+  params:set("amen_loop_num",voice)
   local name=self.breaker.keys[row][col].name
   self.breaker.sel=self.breaker.keys[row][col].sel -- TODO check whether this actually works? pass by reference should work here
-  if name=="stop" then
-    params:set(voice.."amen_play",0)
-  elseif name=="start" then
-    params:set(voice.."amen_play",1)
+  if name=="start" then
+    params:delta(voice.."amen_play",1)
   elseif name=="jump" then
     params:set(voice.."amen_jump",1)
     params:set(voice.."amen_jump",0)
