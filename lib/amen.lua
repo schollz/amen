@@ -349,15 +349,15 @@ function Amen:setup_parameters()
       name='loop beats',
       controlspec=controlspec.new(0.125,8,'lin',0,1,'beats',0.125/(8-0.125)),
       action=function(v)
-        if params:get(i.."amen_loop")==0 then 
+        if params:get(i.."amen_loop")==0 then
           do return end
         end
- local s=self.voice[i].loop_pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
-          if s<0 then
-            s=s+params:get(i.."amen_loopend")
-          end
-          local e=self.voice[i].loop_pos+0.001
-          engine.amenloopnt(i,s,s,e)
+        local s=self.voice[i].loop_pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
+        if s<0 then
+          s=s+params:get(i.."amen_loopend")
+        end
+        local e=self.voice[i].loop_pos+0.001
+        engine.amenloopnt(i,s,s,e)
       end
     }
     params:add {
@@ -366,7 +366,7 @@ function Amen:setup_parameters()
       name='loop beats',
       controlspec=controlspec.new(-2,2,'lin',0,1,'',0.01/2),
       action=function(v)
-        if params:get(i.."amen_loop")==0 then 
+        if params:get(i.."amen_loop")==0 then
           do return end
         end
         engine.amenrate(i,v,0.2)
@@ -693,19 +693,19 @@ function Amen:bitcrush(i)
   engine.amenbitcrush(i,
     params:get(i.."amen_bitcrush"),
     params:get(i.."amen_bitcrush_bits"),
-    params:get(i.."amen_bitcrush_samplerate"))
+  params:get(i.."amen_bitcrush_samplerate"))
 end
 
 function Amen:timestretch(i,on)
-  local val = 0 
-  if on then 
-    val = 1
+  local val=0
+  if on then
+    val=1
   end
   engine.amentimestretch(i,
     val,
     params:get(i.."amen_timestretch"),
     params:get(i.."amen_timestretch_slow"),
-    params:get(i.."amen_timestretch_window"))
+  params:get(i.."amen_timestretch_window"))
 end
 
 function Amen:loop(i,pos,s,e)

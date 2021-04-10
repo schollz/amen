@@ -486,20 +486,20 @@ function redraw()
           local s=""
           for j=1,2 do
             if breaker.controls[sel][j].pre~=nil then
-            s=s..breaker.controls[sel][j].pre
-          end
-          local val = params:get(voice..breaker.controls[sel][j].param)
-          if val==math.floor(val) then
-            val = math.floor(val)
-          end
-          if val > 1000 then 
-            val = math.floor(val/1000).."k"
-          end
+              s=s..breaker.controls[sel][j].pre
+            end
+            local val=params:get(voice..breaker.controls[sel][j].param)
+            if val==math.floor(val) then
+              val=math.floor(val)
+            end
+            if val>1000 then
+              val=math.floor(val/1000).."k"
+            end
 
             s=s..val
             if breaker.controls[sel][j].post~=nil then
-            s=s..breaker.controls[sel][j].post
-          end
+              s=s..breaker.controls[sel][j].post
+            end
             s=s.." "
           end
           box_text(55+45,1,s)
