@@ -228,7 +228,7 @@ function Amen:setup_parameters()
       type='control',
       id=i.."amen_amp",
       name="amp",
-      controlspec=controlspec.new(0,10,'lin',0,1.0,'amp',0.01/10),
+      controlspec=controlspec.new(0,10,'lin',0,0.5,'amp',0.01/10),
       action=function(v)
         print("amenamp "..v)
         engine.amenamp(i,v)
