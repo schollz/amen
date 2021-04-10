@@ -98,9 +98,9 @@ function AmenGrid:press_breaker(row,col)
   if self.breaker.keys[row][col]==nil then
     do return end
   end
-  params:set("amen_loop_num",voice)
-  local name=self.breaker.keys[row][col].name
+  self.breaker.voice=voice
   self.breaker.sel=self.breaker.keys[row][col].sel -- TODO check whether this actually works? pass by reference should work here
+  local name=self.breaker.keys[row][col].name
   if name=="start" then
     params:delta(voice.."amen_play",1)
   elseif name=="jump" then
@@ -120,6 +120,7 @@ function AmenGrid:expandjump(row,col)
     col=col-8
   end
 
+  self.breaker.voice=voice
   local val1=nil
   local val2=nil
   for k,_ in pairs(self.pressed_buttons) do
@@ -183,8 +184,18 @@ function AmenGrid:get_visual()
             or (row==row2 and col<=col2 and row1~=row2)
             or (row>row1 and row<row2) then
             self.visual[row][col+(voice-1)*8]=self.visual[row][col+(voice-1)*8]-1
-            if self.visual[row][col+(voice-1)*8]<2 then
-              self.visual[row][col+(voice-1)*8]=2
+            local level = 2
+            if self.breaker.waveform48[self.amen.voice[voice].sample] ~= nil then
+              local pos = (row-1)*8+col
+              level = self.breaker.waveform48[self.amen.voice[voice].sample][1][pos]
+              level = level + self.breaker.waveform48[self.amen.voice[voice].sample][2][pos]
+              level = util.round(util.linlin(0,2,1,11,math.abs(level)))
+              if level == nil then 
+                level = 2 
+              end
+            end
+            if self.visual[row][col+(voice-1)*8]<level then
+              self.visual[row][col+(voice-1)*8]=level
             end
           end
         end
@@ -215,15 +226,15 @@ function AmenGrid:get_visual()
           local name=self.breaker.keys[row][col].name
           local p=self.breaker.params[name]
           local val=false
-          if name=="stop" then
-            val=params:get(voice.."amen_play")==0
-          elseif name=="start" then
-            val=params:get(voice.."amen_play")==1
-          elseif p~=nil then
-            val=params:get(voice..p)==1
+          if name=="start" and params:get(voice.."amen_play")==0 and self.amen.voice[voice].sample~="" then
+            val=2
+          elseif name=="start" and params:get(voice.."amen_play")==1 then
+            val=15
+          elseif p~=nil and params:get(voice..p)==1 then
+            val=15
           end
           if val then
-            self.visual[row][col+(voice-1)*8]=15
+            self.visual[row][col+(voice-1)*8]=val
           end
         end
       end

@@ -43,11 +43,13 @@ local loop_points={0,0}
 local window={0,0}
 local show_message=nil
 local keyson={false,false}
-local breaker={}
+breaker={}
 breaker.voice=1
 breaker.on=false
 breaker.update=false
 breaker.sel=1
+breaker.waveform={}
+breaker.waveform48={}
 breaker.options={
   {"stop","start"},
   {"reverse","stutter"},
@@ -125,14 +127,31 @@ function init()
     local maxval=0
     for i,v in ipairs(s) do
       if v>maxval then
-        maxval=v
+        maxval=math.abs(v)
       end
     end
     for i,v in ipairs(s) do
       s[i]=s[i]/maxval
     end
-    -- normalize to 1
-    waveform_samples[ch]=s
+    if #s>48 then
+      -- normalize to 1
+      waveform_samples[ch]=s
+      if breaker.on then
+        if breaker.waveform[amen.voice[breaker.voice].sample]==nil then
+          breaker.waveform[amen.voice[breaker.voice].sample]={}
+        end
+        print("setting "..amen.voice[breaker.voice].sample.." ch "..ch.." waveform sample")
+        breaker.waveform[amen.voice[breaker.voice].sample][ch]=s
+      end
+    else
+      if breaker.on then
+        if breaker.waveform48[amen.voice[breaker.voice].sample]==nil then
+          breaker.waveform48[amen.voice[breaker.voice].sample]={}
+        end
+        print("setting 48 "..amen.voice[breaker.voice].sample.." ch "..ch.." waveform sample")
+        breaker.waveform48[amen.voice[breaker.voice].sample][ch]=s
+      end      
+    end
   end)
   softcut.event_phase(function(i,x)
     -- print(i,x)
@@ -160,9 +179,10 @@ function init()
     default_load()
   end
 
+  -- debug
   -- params:set(breaker.voice.."amen_file",_path.audio.."amen/loop59_bpm136.wav")
-  params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
-  params:set("2amen_file",_path.audio.."kolor/bank12/loop_n_hands_bpm120.wav")
+  -- params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
+  -- params:set("2amen_file",_path.audio.."kolor/bank12/loop_n_hands_bpm120.wav")
   -- engine.amenvinyl(4)
 end
 
@@ -400,6 +420,7 @@ function runner_f(c) -- our grid redraw clock
     update_render=false
     for i=1,2 do
       softcut.render_buffer(i,window[1],window[2]-window[1],128)
+      softcut.render_buffer(i,window[1],window[2]-window[1],48)
     end
   end
 
@@ -416,19 +437,23 @@ function runner_f(c) -- our grid redraw clock
     breaker.voice=amen.voice_loaded
     amen.voice_loaded=0
 
-    -- load the sample into softcut for visualization
-    softcut.buffer_clear()
-    softcut.buffer_read_stereo(amen.voice[breaker.voice].sample,0,0,amen.voice[breaker.voice].duration_loaded)
+    if breaker.waveform==nil or breaker.waveform[amen.voice[breaker.voice].sample]==nil then
+      -- load the sample into softcut for visualization
+      softcut.buffer_clear()
+      softcut.buffer_read_stereo(amen.voice[breaker.voice].sample,0,0,amen.voice[breaker.voice].duration_loaded)
+      update_render=true
+    end
     local duration=amen.voice[breaker.voice].samples_loaded/48000
     window={0,duration}
     loop_points={0,duration}
-    update_render=true
 
     if not breaker.on then
       breaker.on=true -- automatically go into breaker mode
       breaker.update=true
     end
-    default_save()
+    clock.run(function()
+      default_save()
+    end)
   end
 
   if breaker.update then
@@ -442,6 +467,10 @@ function runner_f(c) -- our grid redraw clock
         changed=false
       end
     else
+      if amen.voice[breaker.voice].sample ~="" then 
+        softcut.buffer_clear()
+        softcut.buffer_read_stereo(amen.voice[breaker.voice].sample,0,0,amen.voice[breaker.voice].duration_loaded)
+      end
       params:set("1amen_play",0)
       params:set("2amen_play",0)
       -- if amen.voice[voice].sample~="" then
@@ -528,9 +557,13 @@ function redraw()
   if breaker.on then
     pos=util.round(util.linlin(0,1,1,128,amen:current_pos(breaker.voice)))
   end
-  if waveform_samples[1]~=nil and waveform_samples[2]~=nil then
+  local wf = waveform_samples
+  if breaker.on and breaker.waveform[amen.voice[breaker.voice].sample]~=nil then
+    wf = breaker.waveform[amen.voice[breaker.voice].sample]
+  end
+  if wf[1]~=nil and wf[2]~=nil then
     for j=1,2 do
-      for i,s in ipairs(waveform_samples[j]) do
+      for i,s in ipairs(wf[j]) do
         local height=util.clamp(0,waveform_height,util.round(math.abs(s)*waveform_height))
         screen.level(13)
         if i<lp[1] or i>lp[2] then
