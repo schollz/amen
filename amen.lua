@@ -165,7 +165,7 @@ function init()
 
   -- start runner
   runner=metro.init()
-  runner.time=1/30
+  runner.time=1/15
   runner.count=-1
   runner.event=runner_f
   runner:start()
