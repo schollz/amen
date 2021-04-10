@@ -105,8 +105,8 @@ function AmenGrid:press_breaker(row,col)
   elseif name=="start" then
     params:set(voice.."amen_play",1)
   elseif name=="jump" then
-      params:set(voice.."amen_jump",1)
-      params:set(voice.."amen_jump",0)
+    params:set(voice.."amen_jump",1)
+    params:set(voice.."amen_jump",0)
   elseif self.breaker.params[name]~="" then
     params:delta(voice..self.breaker.params[name],1)
   else
@@ -183,7 +183,7 @@ function AmenGrid:get_visual()
             or (row==row1 and col>=col1 and row1~=row2)
             or (row==row2 and col<=col2 and row1~=row2)
             or (row>row1 and row<row2) then
-            self.visual[row][col+(voice-1)*8]=self.visual[row][col+(voice-1)]-1
+            self.visual[row][col+(voice-1)*8]=self.visual[row][col+(voice-1)*8]-1
             if self.visual[row][col+(voice-1)*8]<2 then
               self.visual[row][col+(voice-1)*8]=2
             end
@@ -195,14 +195,18 @@ function AmenGrid:get_visual()
 
 
   -- illuminate current position
-  for voice=1,2 do
-    if params:get(voice.."amen_play")==1 and self.amen.voice[voice].sc_pos>=0 and self.amen.voice[voice].sc_pos<=1 then
-      local row,col=self:num_to_pos(self.amen.voice[voice].sc_pos)
-      if row~=nil and col~=nil then
-        self.visual[row][col+(voice-1)*8]=12
+  for voicev=1,2 do
+    if params:get(voicev.."amen_play")==1 and self.amen.voice[voicev].sc_pos>=0 and self.amen.voice[voicev].sc_pos<=1 then
+      local r,c=self:num_to_pos(self.amen.voice[voicev].sc_pos)
+      if r~=nil and c~=nil then
+        if voicev==2 then
+          c=c+8
+        end
+        self.visual[r][c]=12
       end
     end
   end
+
 
   -- illuminate effects
   for voice=1,2 do

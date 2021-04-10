@@ -161,8 +161,8 @@ function init()
   end
 
   -- params:set(voice.."amen_file",_path.audio.."amen/loop59_bpm136.wav")
-  -- params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
-  -- params:set("2amen_file",_path.audio.."kolor/bank12/loop_n_hands_bpm120.wav")
+  params:set("1amen_file",_path.audio.."amen/amenbreak_bpm136.wav")
+  params:set("2amen_file",_path.audio.."kolor/bank12/loop_n_hands_bpm120.wav")
   -- engine.amenvinyl(4)
 end
 
