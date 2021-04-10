@@ -1,4 +1,4 @@
--- amen v0.0.1
+-- amen v0.1.0
 -- make and break loops
 --
 -- llllllll.co/t/amen
@@ -332,7 +332,7 @@ function dial_effect(k,d)
   if sel1=="stop" then
     -- update the loop stop/start positions
     if k==2 then
-      params:delta(breaker.voice.."amen_loopend",d)
+      params:delta(breaker.voice.."amen_loopstart",d)
     else
       params:delta(breaker.voice.."amen_loopend",d)
     end

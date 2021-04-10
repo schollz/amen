@@ -228,7 +228,7 @@ function Amen:setup_parameters()
       type='control',
       id=i.."amen_amp",
       name="amp",
-      controlspec=controlspec.new(0,10,'lin',0,0.5,'amp',0.01/10),
+      controlspec=controlspec.new(0,10,'lin',0,1.0,'amp',0.01/10),
       action=function(v)
         print("amenamp "..v)
         engine.amenamp(i,v)
@@ -314,7 +314,7 @@ function Amen:setup_parameters()
       end
     }
     self.debounce_loopend=nil
-    params:add_option(i.."amen_quantize_loopend","quantize loopend",{"no","yes"},1)
+    params:add_option(i.."amen_quantize_loopend","quantize loopend",{"no","yes"},2)
 
     -- effects
     params:add{
@@ -724,7 +724,7 @@ function Amen:emit_note(division,t)
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
       print(t/32%(self.voice[i].beats*2))
       self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
-      local loopPos=self.voice[i].beat/self.voice[i].beats_loaded
+      local loopPos=self.voice[i].beat/self.voice[i].beats
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
