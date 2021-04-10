@@ -492,9 +492,9 @@ function Amen:setup_parameters()
       action=function(v)
         print("amen_halfspeed "..v)
         if v==1 then
-          self:effect_rate(i,params:get(i.."amen_rate")/2,0)
+          params:set(i.."amen_rate",params:get(i.."amen_rate")/2)
         else
-          self:effect_rate(i,params:get(i.."amen_rate"),0)
+          params:set(i.."amen_rate",params:get(i.."amen_rate")*2)
         end
       end
     }
@@ -535,9 +535,9 @@ function Amen:setup_parameters()
       action=function(v)
         print("amen_reverse "..v)
         if v==1 then
-          self:effect_rate(i,-1)
+          params:set(i.."amen_rate",-1*params:get(i.."amen_rate"))
         else
-          self:effect_rate(i,1)
+          params:set(i.."amen_rate",-1*params:get(i.."amen_rate"))
         end
       end
     }
