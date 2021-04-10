@@ -17,7 +17,7 @@ the name comes from [Gregory Coleman's performance in "Amen, Brother"](https://w
 
 ## documentation
 
-there are two different modes - a "*sampler mode*"" for making loops and a "*performance mode*" for playing loops back and punching-in effects. switch between the modes using k1. if you don't want to sample a loop you can use the parameters menu to load a loop (just make sure the loop you load has `bpmX` somewhere in the title so that the bpm can be correctly attributed). amen loads in *performance mode* by default.
+there are two different modes - a "*performance mode*" for making loops and a  "*sampler mode*" for playing loops back and punching-in effects. switch between the modes using k1. if you don't want to sample a loop you can use the parameters menu to load a loop (just make sure the loop you load has `bpmX` somewhere in the title so that the bpm can be correctly attributed). amen loads in *performance mode* by default.
 
 ### performance mode
 
@@ -54,10 +54,13 @@ in this mode you can playback the current loop with all sorts of punch-in effect
 - bitcrush
 - vinyl / lofi
 - timestretching
+- ??? (your favorite effect?)
 
 **unquantized vs quantized loop lengths**: when you see "stop" and "start" you can change the loop lengths manually with e2 and e3. e2 changes the start position and e3 changes the end position. however, its important to note that when you change e2 you are making fine adjustments without quantizing loop length. conversely, when you change e3 it will force the loop to now snap to the nearest beat. so if don't want to snap to a beat, set e2 last, or conversely if you do want to snap to a beat, use e3 after adjusting e2. the beat sync will still be quantized in both cases, but it can be interesting to have (or not have) a quantized loop length.
 
 **startup**: startup will automatically load the last loop you were working with, but not any saved parameters. save/load PSETs normally to save your state.
+
+**grid:** divided into left and right sides corresponding to loops #1 and #2 respectively. the first six rows are mapped across the entire sample, with brightness showing transient heights. pressing a key in this area will jump to that position. pressing and holding two keys will resize the current loop. the bottom two rows map to all the parameters (pressing one will show it on the norns so you can see what they are). 
 
 ### sampler mode
 
@@ -77,8 +80,6 @@ in this mode you can sample stereo audio to make new loops or edit the start/end
 - e3 changes loop length
 
 **sampling strategy**: this sampler has plenty of memory (~minutes) so its best to record more than you need and then fit the sample window to what you need after recording is over. to get started, first turn e1 to expand the recording space to a little more than you might need and then press k2 to start/stop recording. when done recording use e2 and e3 to clip just the sample you want to use (e1 is handy again here to zoom in on the beginning to get the right transients).
-
-
 
 ## download
 
