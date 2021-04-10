@@ -184,14 +184,14 @@ function AmenGrid:get_visual()
             or (row==row2 and col<=col2 and row1~=row2)
             or (row>row1 and row<row2) then
             self.visual[row][col+(voice-1)*8]=self.visual[row][col+(voice-1)*8]-1
-            local level = 2
-            if self.breaker.waveform48[self.amen.voice[voice].sample] ~= nil then
-              local pos = (row-1)*8+col
-              level = self.breaker.waveform48[self.amen.voice[voice].sample][1][pos]
-              level = level + self.breaker.waveform48[self.amen.voice[voice].sample][2][pos]
-              level = util.round(util.linlin(0,2,1,11,math.abs(level)))
-              if level == nil then 
-                level = 2 
+            local level=2
+            if self.breaker.waveform48[self.amen.voice[voice].sample]~=nil then
+              local pos=(row-1)*8+col
+              level=self.breaker.waveform48[self.amen.voice[voice].sample][1][pos]
+              level=level+self.breaker.waveform48[self.amen.voice[voice].sample][2][pos]
+              level=util.round(util.linlin(0,2,1,11,math.abs(level)))
+              if level==nil then
+                level=2
               end
             end
             if self.visual[row][col+(voice-1)*8]<level then

@@ -150,7 +150,7 @@ function init()
         end
         print("setting 48 "..amen.voice[breaker.voice].sample.." ch "..ch.." waveform sample")
         breaker.waveform48[amen.voice[breaker.voice].sample][ch]=s
-      end      
+      end
     end
   end)
   softcut.event_phase(function(i,x)
@@ -467,7 +467,7 @@ function runner_f(c) -- our grid redraw clock
         changed=false
       end
     else
-      if amen.voice[breaker.voice].sample ~="" then 
+      if amen.voice[breaker.voice].sample~="" then
         softcut.buffer_clear()
         softcut.buffer_read_stereo(amen.voice[breaker.voice].sample,0,0,amen.voice[breaker.voice].duration_loaded)
       end
@@ -557,9 +557,9 @@ function redraw()
   if breaker.on then
     pos=util.round(util.linlin(0,1,1,128,amen:current_pos(breaker.voice)))
   end
-  local wf = waveform_samples
+  local wf=waveform_samples
   if breaker.on and breaker.waveform[amen.voice[breaker.voice].sample]~=nil then
-    wf = breaker.waveform[amen.voice[breaker.voice].sample]
+    wf=breaker.waveform[amen.voice[breaker.voice].sample]
   end
   if wf[1]~=nil and wf[2]~=nil then
     for j=1,2 do
