@@ -50,7 +50,7 @@ breaker.update=false
 breaker.sel=1
 breaker.options={
   {"stop","start"},
-  {"scratch","loop"},
+  {"scratch","halfspeed"},
   {"stutter","strobe"},
   {"reverse","jump"},
   {"lpf","hpf"},
@@ -72,6 +72,7 @@ breaker.params={
   hpf="amen_hpf_effect",
   stutter="amen_stutter",
   timestretch="amen_timestretch",
+  halfspeed="amen_halfspeed",
 }
 breaker.controls={
   bitcrush={{param="amen_bitcrush_bits",post="bits"},{param="amen_bitcrush_samplerate",post="Hz"}},
@@ -369,6 +370,8 @@ function key(k,z)
         params:delta(voice.."amen_vinyl",1)
       elseif sel=="timestretch" and z==1 then
         params:delta(voice.."amen_timestretch",1)
+      elseif sel=="halfspeed" and z==1 then
+        params:delta(voice.."amen_halfspeed",1)
       end
     end
   else

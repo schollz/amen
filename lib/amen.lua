@@ -5,10 +5,9 @@ local Amen={}
 local TYPE_SCRATCH=1
 local TYPE_RATE=2
 local TYPE_JUMP=3
-local TYPE_TAPESTOP=4
 local TYPE_SPLIT=5
 local TYPE_LOOP=6
-local TYPE_FILTERDOWN=7
+local TYPE_LPF=7
 local TYPE_STROBE=8
 local TYPE_VINYL=9
 local TYPE_HPF=10
@@ -142,11 +141,11 @@ function Amen:setup_midi()
 end
 
 function Amen:setup_parameters()
-  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window","amen_rate"}
+  self.param_names={"amen_file","amen_play","amen_amp","amen_pan","amen_lpf","amen_hpf","amen_loopstart","amen_loopend","amen_loop","amen_loop_prob","amen_stutter","amen_stutter_prob","amen_jump","amen_jump_prob","amen_lpf_effect","amen_lpf_effect_prob","amen_hpf_effect","amen_hpf_effect_prob","amen_tapestop","amen_tapestop_prob","amen_scratch","amen_scratch_prob","amen_reverse","amen_reverse_prob","amen_strobe","amen_strobe_prob","amen_vinyl","amen_vinyl_prob","amen_bitcrush","amen_bitcrush_prob","amen_expandjump","amen_quantize_loopend","amen_loop_beats","amen_sync_per_loop","amen_bitcrush_bits","amen_bitcrush_samplerate","amen_timestretch","amen_timestretch_prob","amen_timestretch_slow","amen_timestretch_window","amen_rate","amen_halfspeed","amen_halfspeed_prob"}
   local ending=".wav"
   -- add parameters
 
-  params:add_group("AMEN",41*2+3)
+  params:add_group("AMEN",43*2+3)
   params:add {
     type='control',
     id="amen_crossfade",
@@ -403,9 +402,9 @@ function Amen:setup_parameters()
       action=function(v)
         print("amen_lpf_effect "..v)
         if v==1 then
-          self:effect_filterdown(i,100)
+          self:effect_lpf(i,100)
         else
-          self:effect_filterdown(i,params:get(i.."amen_lpf"))
+          self:effect_lpf(i,params:get(i.."amen_lpf"))
         end
       end
     }
@@ -423,9 +422,9 @@ function Amen:setup_parameters()
       action=function(v)
         print("amen_hpf_effect "..v)
         if v==1 then
-          self:effect_filterup(i,6000,4)
+          self:effect_hpf(i,6000,4)
         else
-          self:effect_filterup(i,params:get(i.."amen_hpf"),4)
+          self:effect_hpf(i,params:get(i.."amen_hpf"),4)
         end
       end
     }
@@ -444,11 +443,11 @@ function Amen:setup_parameters()
         print("amen_tapestop "..v)
         if v==1 then
           self.voice[i].disable_reset=true
-          self:effect_tapestop(i,false)
+          self:effect_rate(i,0,4)
         else
           self.voice[i].disable_reset=false
           self.voice[i].hard_reset=true
-          self:effect_tapestop(i,true)
+          self:effect_rate(i,params:get(i.."amen_rate"),4)
         end
       end
     }
@@ -456,6 +455,26 @@ function Amen:setup_parameters()
       type='control',
       id=i..'amen_tapestop_prob',
       name='tape stop prob',
+      controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
+    }
+    params:add{
+      type='binary',
+      name="halfspeed",
+      id=i..'amen_halfspeed',
+      behavior='toggle',
+      action=function(v)
+        print("amen_halfspeed "..v)
+        if v==1 then
+          self:effect_rate(i,params:get(i.."amen_rate")/2,0)
+        else
+          self:effect_rate(i,params:get(i.."amen_rate"),0)
+        end
+      end
+    }
+    params:add {
+      type='control',
+      id=i..'amen_halfspeed_prob',
+      name='halfspeed prob',
       controlspec=controlspec.new(0,100,'lin',0,0,'%',1/100),
     }
     params:add{
@@ -742,6 +761,13 @@ function Amen:emit_note(division,t)
           params:set(i.."amen_tapestop",0)
         end)
       end
+      if params:get(i.."amen_halfspeed_prob")/100/8>math.random() then
+        params:set(i.."amen_halfspeed",1)
+        clock.run(function()
+          clock.sleep(math.random(0,7)/10)
+          params:set(i.."amen_halfspeed",0)
+        end)
+      end
       if params:get(i.."amen_scratch_prob")/100/8>math.random() then
         params:set(i.."amen_scratch",1)
         clock.run(function()
@@ -807,24 +833,11 @@ function Amen:process_queue(i,q)
   elseif q[1]==TYPE_JUMP then
     self:loop(i,q[2])
   elseif q[1]==TYPE_RATE then
-    local original_rate=self.voice[i].rate
-    self.voice[i].rate=q[2]
-    engine.amenrate(i,q[2],0)
-    if q[3]~=nil then
-      clock.run(function()
-        clock.sync(q[3])
-        engine.amenrate(i,original_rate,0)
-        self.voice[i].rate=original_rate
-      end)
+    local lag=q[3]
+    if lag==nil then
+      lag=0
     end
-  elseif q[1]==TYPE_TAPESTOP then
-    engine.amenrate(i,q[2],2)
-    if q[3]~=nil then
-      clock.run(function()
-        clock.sync(q[3])
-        engine.amenrate(i,self.voice[i].rate,4)
-      end)
-    end
+    engine.amenrate(i,q[2],lag)
   elseif q[1]==TYPE_LOOP then
     if q[5]~=nil then
       engine.amenloop(i,q[5],q[2],q[3])
@@ -838,8 +851,8 @@ function Amen:process_queue(i,q)
         self:loop(i,params:get(i.."amen_loopstart"))
       end)
     end
-  elseif q[1]==TYPE_FILTERDOWN then
-    print(i.." TYPE_FILTERDOWN")
+  elseif q[1]==TYPE_LPF then
+    print(i.." TYPE_LPF")
     engine.amenlpf(i,q[2],2)
   elseif q[1]==TYPE_HPF then
     print(i.." TYPE_HPF")
@@ -873,31 +886,23 @@ function Amen:effect_scratch(i,val,duration)
   table.insert(self.voice[i].queue,{TYPE_SCRATCH,val,duration})
 end
 
+function Amen:effect_rate(i,val,lag)
+  table.insert(self.voice[i].queue,{TYPE_RATE,val,lag})
+end
+
 function Amen:effect_jump(i,val)
   table.insert(self.voice[i].queue,{TYPE_JUMP,val})
-end
-
-function Amen:effect_tapestop(i,on,duration)
-  local rate=0
-  if on then
-    rate=self.voice[i].rate
-  end
-  table.insert(self.voice[i].queue,{TYPE_TAPESTOP,rate,duration})
-end
-
-function Amen:effect_rate(i,val,duration)
-  table.insert(self.voice[i].queue,{TYPE_RATE,val,duration})
 end
 
 function Amen:effect_loop(i,loopStart,loopEnd,duration,newstart)
   table.insert(self.voice[i].queue,{TYPE_LOOP,loopStart,loopEnd,duration,newstart})
 end
 
-function Amen:effect_filterdown(i,fc,duration)
-  table.insert(self.voice[i].queue,{TYPE_FILTERDOWN,fc,duration})
+function Amen:effect_lpf(i,fc,duration)
+  table.insert(self.voice[i].queue,{TYPE_LPF,fc,duration})
 end
 
-function Amen:effect_filterup(i,fc,duration)
+function Amen:effect_hpf(i,fc,duration)
   table.insert(self.voice[i].queue,{TYPE_HPF,fc,duration})
 end
 
