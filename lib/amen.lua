@@ -382,7 +382,7 @@ function Amen:setup_parameters()
       type='binary',
       name="stutter",
       id=i..'amen_stutter',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print(i.."amen_stutter "..v)
         if v==1 then
@@ -390,7 +390,9 @@ function Amen:setup_parameters()
           local e=s+math.random(30,100)/self.voice[i].duration_loaded/1000
           print("stutter",s,e)
           self:effect_loop(i,s,e)
+          self.voice[i].disable_reset=true
         else
+          self.voice[i].disable_reset=false
           self.voice[i].hard_reset=true
         end
       end
@@ -423,7 +425,7 @@ function Amen:setup_parameters()
       type='binary',
       name="lpf effect",
       id=i..'amen_lpf_effect',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print("amen_lpf_effect "..v)
         if v==1 then
@@ -443,7 +445,7 @@ function Amen:setup_parameters()
       type='binary',
       name="hpf effect",
       id=i..'amen_hpf_effect',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print("amen_hpf_effect "..v)
         if v==1 then
@@ -463,7 +465,7 @@ function Amen:setup_parameters()
       type='binary',
       name="tape stop",
       id=i..'amen_tapestop',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print("amen_tapestop "..v)
         if v==1 then
@@ -506,7 +508,7 @@ function Amen:setup_parameters()
       type='binary',
       name="scratch",
       id=i..'amen_scratch',
-      behavior='momentary',
+      behavior='toggle',
       action=function(v)
         print("amen_scratch "..v)
         if v==1 then

@@ -11,7 +11,7 @@ function AmenGrid:new(args)
 
   -- determine the breaker keys
   m.breaker.keys={}
-  local row=6
+  local row=7
   local col=1
   for sel,option in ipairs(m.breaker.options) do
     for j=1,2 do
@@ -80,7 +80,7 @@ function AmenGrid:key_press(row,col,on)
   if row<7 and on then
     -- change position
     self:expandjump(row,col)
-  else
+  elseif on then
     self:press_breaker(row,col)
   end
 end
@@ -101,11 +101,14 @@ function AmenGrid:press_breaker(row,col)
   local name=self.breaker.keys[row][col].name
   self.breaker.sel=self.breaker.keys[row][col].sel -- TODO check whether this actually works? pass by reference should work here
   if name=="stop" then
-    params:set(voice.."play",0)
+    params:set(voice.."amen_play",0)
   elseif name=="start" then
-    params:set(voice.."play",1)
-  elseif breaker.params[name]~="" then
-    params:delta(voice..breaker.params[name],1)
+    params:set(voice.."amen_play",1)
+  elseif name=="jump" then
+      params:set(voice.."amen_jump",1)
+      params:set(voice.."amen_jump",0)
+  elseif self.breaker.params[name]~="" then
+    params:delta(voice..self.breaker.params[name],1)
   else
     print("amengrid: unknown param name: "..name)
   end
@@ -210,9 +213,9 @@ function AmenGrid:get_visual()
           local p=self.breaker.params[name]
           local val=false
           if name=="stop" then
-            val=params:get(voice.."play")==0
+            val=params:get(voice.."amen_play")==0
           elseif name=="start" then
-            val=params:get(voice.."play")==1
+            val=params:get(voice.."amen_play")==1
           elseif p~=nil then
             val=params:get(voice..p)==1
           end
