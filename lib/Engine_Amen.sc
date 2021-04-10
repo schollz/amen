@@ -55,7 +55,7 @@ Engine_Amen : CroneEngine {
                 rate = Lag.kr(rate,rateSlew);
                 rate = rate * bpm_target / bpm_sample;
                 // scratch effect
-                rate = (scratch<1*rate) + (scratch>0*LFTri.kr(scratch));
+                rate = (scratch<1*rate) + (scratch>0*LFTri.kr(bpm_target/60*2));
 
                 pos = Phasor.ar(
                     trig:t_trig,
