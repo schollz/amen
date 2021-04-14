@@ -181,6 +181,7 @@ function Amen:setup_parameters()
       end
       local ch,samples,samplerate=audio.file_info(fname)
       self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
+      print("loaded with bpm "..self.voice[i].bpm)
       if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
         self.voice[i].bpm=clock.get_tempo()
       end
