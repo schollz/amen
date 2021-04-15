@@ -3,7 +3,7 @@
 // Inherit methods from CroneEngine
 Engine_Amen : CroneEngine {
 
-    // Amen specific v0.0.1
+    // Amen specific v0.1.0
     var sampleBuffAmen;
     var playerAmen;
     var playerVinyl; 

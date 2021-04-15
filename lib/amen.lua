@@ -16,6 +16,7 @@ function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
   local args=args==nil and {} or args
   l.debug=args.debug
+  l.lattice=args.lattice
 
   -- set engine
 
@@ -47,9 +48,14 @@ function Amen:new(args)
   -- setup lattice
   l.metronome_tick=false
   l.bpm_current=0
-  l.lattice=lattice:new({
-    ppqn=64
-  })
+  if l.lattice == nil then
+    l.lattice_self=true
+    l.lattice=lattice:new({
+      ppqn=64
+    })
+  else
+    l.lattice_self=false
+  end
   l.timers={}
   l.divisions={16}
   for _,division in ipairs(l.divisions) do
@@ -217,7 +223,9 @@ function Amen:setup_parameters()
         print("amen_play "..v)
         if v==1 then
           engine.amenrate(i,1,0)
-          self.lattice:hard_restart()
+          if self.lattice_self then
+            self.lattice:hard_restart()
+          end
         else
           self:loop(i,params:get(i.."amen_loopstart"))
           engine.amenrate(i,0,1/30)
