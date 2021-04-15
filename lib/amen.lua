@@ -731,7 +731,7 @@ function Amen:emit_note(division,t)
   -- keep the sample one beat
   for i=1,2 do
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
-      print(t/32%(self.voice[i].beats*2))
+      -- print(t/32%(self.voice[i].beats*2))
       self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
       local loopPos=self.voice[i].beat/self.voice[i].beats
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
