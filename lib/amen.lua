@@ -212,6 +212,7 @@ function Amen:setup_parameters()
       engine.amenamp(i,params:get(i.."amen_amp"))
       params:set(i.."amen_play",0)
       self.voice_loaded=i -- trigger for loading images
+      _menu.rebuild_params()
       _menu.redraw()
     end)
     params:add{
@@ -333,6 +334,9 @@ function Amen:setup_parameters()
       behavior='toggle',
       action=function(v)
         print(i.."amen_loop "..v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         if v==1 then
           self.voice[i].loop_pos=self:current_pos(i)
           local s=self.voice[i].loop_pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
@@ -393,6 +397,9 @@ function Amen:setup_parameters()
       id=i..'amen_stutter',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print(i.."amen_stutter "..v)
         if v==1 then
           local s=self:current_pos(i)
@@ -418,6 +425,9 @@ function Amen:setup_parameters()
       id=i..'amen_jump',
       behavior='trigger',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         if v==1 then
           print(i.."amen_jump "..v)
           self:effect_jump(i,math.random(1,16)/16)
@@ -436,6 +446,9 @@ function Amen:setup_parameters()
       id=i..'amen_lpf_effect',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_lpf_effect "..v)
         if v==1 then
           self:effect_lpf(i,100)
@@ -456,6 +469,9 @@ function Amen:setup_parameters()
       id=i..'amen_hpf_effect',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_hpf_effect "..v)
         if v==1 then
           self:effect_hpf(i,6000,4)
@@ -476,6 +492,9 @@ function Amen:setup_parameters()
       id=i..'amen_tapestop',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_tapestop "..v)
         if v==1 then
           self.voice[i].disable_reset=true
@@ -499,6 +518,9 @@ function Amen:setup_parameters()
       id=i..'amen_halfspeed',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_halfspeed "..v)
         if v==1 then
           params:set(i.."amen_rate",params:get(i.."amen_rate")/2)
@@ -519,6 +541,9 @@ function Amen:setup_parameters()
       id=i..'amen_scratch',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_scratch "..v)
         if v==1 then
           self.voice[i].disable_reset=true
@@ -542,6 +567,9 @@ function Amen:setup_parameters()
       id=i..'amen_reverse',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_reverse "..v)
         if v==1 then
           params:set(i.."amen_rate",-1*params:get(i.."amen_rate"))
@@ -562,6 +590,9 @@ function Amen:setup_parameters()
       id=i..'amen_strobe',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_strobe "..v)
         if v==1 then
           self:effect_strobe(i,1)
@@ -648,7 +679,7 @@ function Amen:setup_parameters()
       type='control',
       name='timestretch slow',
       id=i..'amen_timestretch_slow',
-      controlspec=controlspec.new(1,16,'lin',0,2,'x',0.25/(16-1)),
+      controlspec=controlspec.new(1,16,'lin',0,4,'x',0.25/(16-1)),
       action=function(v)
         self:timestretch(i)
       end
@@ -657,7 +688,7 @@ function Amen:setup_parameters()
       type='control',
       name='timestretch window',
       id=i..'amen_timestretch_window',
-      controlspec=controlspec.new(0.125,16,'lin',0,2,'beats',0.125/(16-0.125)),
+      controlspec=controlspec.new(0.125,16,'lin',0,4,'beats',0.125/(16-0.125)),
       action=function(v)
         self:timestretch(i)
       end
@@ -681,6 +712,9 @@ function Amen:setup_parameters()
         elseif v>params:get(i.."amen_loopend") then
           params:set(i.."amen_loopend",v)
         else
+          if params:get(i.."amen_play")==0 then
+            do return end
+          end
           -- self:effect_jump(i,v)
           self:loop(i,v)
         end
