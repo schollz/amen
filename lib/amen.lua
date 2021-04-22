@@ -37,6 +37,7 @@ function Amen:new(args)
       split=false,
       spin=0,
       sc_pos=0,
+      sc_pos_last=0,
       sc_active={1},
     }
   end
@@ -99,12 +100,14 @@ function Amen:new(args)
 end
 
 function Amen:current_pos(i)
-  -- return self.voice[i].sc_pos[self.voice[i].sc_active]
+  local next_pos = self.voice[i].sc_pos
   if params:get(i.."amen_play")==0 then
-    return params:get(i.."amen_loopstart")
-  else
-    return self.voice[i].sc_pos
+    next_pos= params:get(i.."amen_loopstart")
   end
+  if next_pos >= params:get(i.."amen_loopstart") and next_pos <= params:get(i.."amen_loopend") then
+    self.voice[i].sc_pos_last=next_pos
+  end
+  return self.voice[i].sc_pos_last
 end
 
 function Amen:setup_midi()
