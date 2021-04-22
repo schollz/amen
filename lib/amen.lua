@@ -785,7 +785,7 @@ function Amen:emit_note(division,t)
         self:loop(i,loopPos)
       end
       -- add option to sync every X loops (==0 is one whole loop)
-      if t/32%math.ceil(self.voice[i].beats*2/(params:get(i.."amen_sync_per_loop")/4))==0 then
+      if t/32%math.ceil(self.voice[i].beats*2/(params:get(i.."amen_sync_per_loop")/4/(params:get(i.."amen_halfspeed")+1)))==0 then
         -- reset to get back in sync
         print("syncing loop "..i.." to pos "..loopPos)
         self:loop(i,loopPos)
