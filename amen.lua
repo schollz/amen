@@ -1,4 +1,4 @@
--- amen v0.1.0
+-- amen v0.2.0
 -- make and break loops
 --
 -- llllllll.co/t/amen
