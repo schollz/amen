@@ -100,7 +100,11 @@ end
 
 function Amen:current_pos(i)
   -- return self.voice[i].sc_pos[self.voice[i].sc_active]
-  return self.voice[i].sc_pos
+  if params:get(i.."amen_play")==0 then
+    return params:get(i.."amen_loopstart")
+  else
+    return self.voice[i].sc_pos
+  end
 end
 
 function Amen:setup_midi()
@@ -224,11 +228,14 @@ function Amen:setup_parameters()
         print("amen_play "..v)
         if v==1 then
           engine.amenrate(i,1,0)
+          engine.amenamp(i,params:get(i.."amen_amp"))
           if self.lattice_self then
             self.lattice:hard_restart()
           end
         else
+          print("resetting to "..params:get(i.."amen_loopstart"))
           self:loop(i,params:get(i.."amen_loopstart"))
+          engine.amenamp(i,0)
           engine.amenrate(i,0,1/30)
         end
       end
@@ -768,6 +775,7 @@ function Amen:emit_note(division,t)
       -- print(t/32%(self.voice[i].beats*2))
       self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
       local loopPos=self.voice[i].beat/self.voice[i].beats
+      loopPos = util.linlin(0,1,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"),loopPos)
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
@@ -776,7 +784,7 @@ function Amen:emit_note(division,t)
       -- add option to sync every X loops (==0 is one whole loop)
       if t/32%math.ceil(self.voice[i].beats*2/(params:get(i.."amen_sync_per_loop")/4))==0 then
         -- reset to get back in sync
-        print("syncing loop")
+        print("syncing loop "..i.." to pos "..loopPos)
         self:loop(i,loopPos)
         --engine.amenreset(i)
       end

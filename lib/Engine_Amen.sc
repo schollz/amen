@@ -115,7 +115,7 @@ Engine_Amen : CroneEngine {
                 // manual panning
                 snd = Balance2.ar(snd[0],snd[1],
                     pan+SinOsc.kr(60/bpm_target*16,mul:strobe*0.5),
-                    level:amp*Lag.kr(amp_crossfade,0.2)
+                    level:Lag.kr(amp,0.2)*Lag.kr(amp_crossfade,0.2)
                 );
 
                 SendTrig.kr(Impulse.kr(30),i,A2K.kr(((1-timestretch)*pos)+(timestretch*timestretchPos))/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
