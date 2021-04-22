@@ -3,7 +3,7 @@
 // Inherit methods from CroneEngine
 Engine_Amen : CroneEngine {
 
-    // Amen specific v0.0.1
+    // Amen specific v0.1.0
     var sampleBuffAmen;
     var playerAmen;
     var playerVinyl; 
@@ -29,14 +29,24 @@ Engine_Amen : CroneEngine {
         });
 
         SynthDef("vinylSound",{
-            | bufnum = 0,amp=0,hpf=800,lpf=4000|
-            var snd;
+            | bufnum = 0,amp=0,hpf=800,lpf=4000,rate=1,rateSlew=4,scratch=0,bpm_target=120,t_trig=1|
+            var snd,pos;
             amp = Lag.kr(amp,2);
             amp = amp * VarLag.kr(LFNoise0.kr(1).range(0.1,1),2,warp:\sine);
-            snd = amp * PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum),loop:1);
+            rate = Lag.kr(rate,rateSlew);
+            rate = (scratch<1*rate) + (scratch>0*LFTri.kr(bpm_target/60*2));
+            pos = Phasor.ar(
+                trig:t_trig,
+                rate:BufRateScale.kr(bufnum)*rate,
+                end:BufFrames.kr(bufnum),
+            );
+            snd=BufRd.ar(2,bufnum,pos,
+                loop:1,
+                interpolation:1
+            );
             snd = HPF.ar(snd,hpf);
             snd = LPF.ar(snd,lpf);
-            Out.ar(0,snd);
+            Out.ar(0,snd*amp);
         }).add;
 
         // two players per buffer (4 players total)
@@ -55,7 +65,7 @@ Engine_Amen : CroneEngine {
                 rate = Lag.kr(rate,rateSlew);
                 rate = rate * bpm_target / bpm_sample;
                 // scratch effect
-                rate = (scratch<1*rate) + (scratch>0*LFTri.kr(scratch));
+                rate = (scratch<1*rate) + (scratch>0*LFTri.kr(bpm_target/60*2));
 
                 pos = Phasor.ar(
                     trig:t_trig,
@@ -105,7 +115,7 @@ Engine_Amen : CroneEngine {
                 // manual panning
                 snd = Balance2.ar(snd[0],snd[1],
                     pan+SinOsc.kr(60/bpm_target*16,mul:strobe*0.5),
-                    level:amp*Lag.kr(amp_crossfade,0.2)
+                    level:Lag.kr(amp,0.2)*Lag.kr(amp_crossfade,0.2)
                 );
 
                 SendTrig.kr(Impulse.kr(30),i,A2K.kr(((1-timestretch)*pos)+(timestretch*timestretchPos))/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
@@ -119,30 +129,13 @@ Engine_Amen : CroneEngine {
             arg msg, time; 
                 // [time, msg].postln;
             // voice "1" uses voices 0 and 2 in sc
-            if (msg[2]==0, {
-                if (playerSwap[0]==0, {
-                    NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
-                },{});
-            },{
-                if (msg[2]==2, {
-                if (playerSwap[0]==1, {
-                    NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
-                },{});
-                },{
-                    // voice "2" uses voices 1 and 3 in sc
-                    if (msg[2]==1, {
-                    if (playerSwap[1]==0, {
-                        NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);   //sendMsg works out the correct OSC message for you
-                    },{});
-                    },{
-                        if (msg[2]==3, {
-                        if (playerSwap[1]==1, {
-                            NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);   //sendMsg works out the correct OSC message for you
-                        },{});
-                        },{});
-                    });
-                });
-            });
+            if (((msg[2]==0)&&(playerSwap[0]==0))||((msg[2]==2)&&(playerSwap[0]==1)), {
+                NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);  
+            },{});
+
+            if (((msg[2]==1)&&(playerSwap[0]==0))||((msg[2]==3)&&(playerSwap[0]==1)), {
+                NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);
+            },{});
 
             // if ((msg[2]==2)*(playerSwap[0]==1), {
             //     NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
@@ -161,7 +154,7 @@ Engine_Amen : CroneEngine {
             Synth("playerAmen"++i, target:context.xg);
         });
 
-        playerVinyl = Synth("vinylSound",target:context.xg);
+        playerVinyl = Synth("vinylSound",[ \bufnum,sampleVinyl,\amp,0],target:context.xg);
 
         this.addCommand("amenrelease","", { arg msg;
             (0..2).do({arg i; 
@@ -209,6 +202,9 @@ Engine_Amen : CroneEngine {
             );
             playerAmen[msg[1]+1].set(
                 \bpm_sample,msg[2],
+                \bpm_target,msg[3],
+            );
+            playerVinyl.set(
                 \bpm_target,msg[3],
             );
         });
@@ -284,6 +280,9 @@ Engine_Amen : CroneEngine {
             playerAmen[msg[1]+1].set(
                 \scratch,msg[2],
             );
+            playerVinyl.set(
+                \scratch,msg[2],
+            );
         });
 
         this.addCommand("amenoff","i", { arg msg;
@@ -349,8 +348,13 @@ Engine_Amen : CroneEngine {
                 \vinyl,msg[2],
             );
             playerVinyl.set(
-                \bufnum,sampleVinyl,
                 \amp,msg[2],
+            );
+        });
+
+        this.addCommand("amenvinylrate","f", { arg msg;
+            playerVinyl.set(
+                \rate,msg[1],
             );
         });
 

@@ -1,4 +1,4 @@
--- amen v0.1.0
+-- amen v0.2.0
 -- make and break loops
 --
 -- llllllll.co/t/amen
@@ -165,7 +165,7 @@ function init()
 
   -- start runner
   runner=metro.init()
-  runner.time=1/30
+  runner.time=1/15
   runner.count=-1
   runner.event=runner_f
   runner:start()

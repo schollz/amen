@@ -16,6 +16,7 @@ function Amen:new(args)
   local l=setmetatable({},{__index=Amen})
   local args=args==nil and {} or args
   l.debug=args.debug
+  l.lattice=args.lattice
 
   -- set engine
 
@@ -36,6 +37,7 @@ function Amen:new(args)
       split=false,
       spin=0,
       sc_pos=0,
+      sc_pos_last=0,
       sc_active={1},
     }
   end
@@ -47,9 +49,14 @@ function Amen:new(args)
   -- setup lattice
   l.metronome_tick=false
   l.bpm_current=0
-  l.lattice=lattice:new({
-    ppqn=64
-  })
+  if l.lattice == nil then
+    l.lattice_self=true
+    l.lattice=lattice:new({
+      ppqn=64
+    })
+  else
+    l.lattice_self=false
+  end
   l.timers={}
   l.divisions={16}
   for _,division in ipairs(l.divisions) do
@@ -93,8 +100,14 @@ function Amen:new(args)
 end
 
 function Amen:current_pos(i)
-  -- return self.voice[i].sc_pos[self.voice[i].sc_active]
-  return self.voice[i].sc_pos
+  local next_pos = self.voice[i].sc_pos
+  if params:get(i.."amen_play")==0 then
+    next_pos= params:get(i.."amen_loopstart")
+  end
+  if next_pos >= params:get(i.."amen_loopstart") and next_pos <= params:get(i.."amen_loopend") then
+    self.voice[i].sc_pos_last=next_pos
+  end
+  return self.voice[i].sc_pos_last
 end
 
 function Amen:setup_midi()
@@ -181,6 +194,7 @@ function Amen:setup_parameters()
       end
       local ch,samples,samplerate=audio.file_info(fname)
       self.voice[i].bpm=tonumber(string.match(fname,'bpm(%d*)'))
+      print("loaded with bpm "..self.voice[i].bpm)
       if self.voice[i].bpm==nil or self.voice[i].bpm<1 then
         self.voice[i].bpm=clock.get_tempo()
       end
@@ -205,6 +219,7 @@ function Amen:setup_parameters()
       engine.amenamp(i,params:get(i.."amen_amp"))
       params:set(i.."amen_play",0)
       self.voice_loaded=i -- trigger for loading images
+      _menu.rebuild_params()
       _menu.redraw()
     end)
     params:add{
@@ -216,9 +231,14 @@ function Amen:setup_parameters()
         print("amen_play "..v)
         if v==1 then
           engine.amenrate(i,1,0)
-          self.lattice:hard_restart()
+          engine.amenamp(i,params:get(i.."amen_amp"))
+          if self.lattice_self then
+            self.lattice:hard_restart()
+          end
         else
+          print("resetting to "..params:get(i.."amen_loopstart"))
           self:loop(i,params:get(i.."amen_loopstart"))
+          engine.amenamp(i,0)
           engine.amenrate(i,0,1/30)
         end
       end
@@ -324,6 +344,9 @@ function Amen:setup_parameters()
       behavior='toggle',
       action=function(v)
         print(i.."amen_loop "..v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         if v==1 then
           self.voice[i].loop_pos=self:current_pos(i)
           local s=self.voice[i].loop_pos-(params:get(i.."amen_loop_beats")*clock.get_beat_sec())/self.voice[i].duration_loaded
@@ -384,6 +407,9 @@ function Amen:setup_parameters()
       id=i..'amen_stutter',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print(i.."amen_stutter "..v)
         if v==1 then
           local s=self:current_pos(i)
@@ -409,6 +435,9 @@ function Amen:setup_parameters()
       id=i..'amen_jump',
       behavior='trigger',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         if v==1 then
           print(i.."amen_jump "..v)
           self:effect_jump(i,math.random(1,16)/16)
@@ -427,6 +456,9 @@ function Amen:setup_parameters()
       id=i..'amen_lpf_effect',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_lpf_effect "..v)
         if v==1 then
           self:effect_lpf(i,100)
@@ -447,6 +479,9 @@ function Amen:setup_parameters()
       id=i..'amen_hpf_effect',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_hpf_effect "..v)
         if v==1 then
           self:effect_hpf(i,6000,4)
@@ -467,6 +502,9 @@ function Amen:setup_parameters()
       id=i..'amen_tapestop',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_tapestop "..v)
         if v==1 then
           self.voice[i].disable_reset=true
@@ -490,6 +528,9 @@ function Amen:setup_parameters()
       id=i..'amen_halfspeed',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_halfspeed "..v)
         if v==1 then
           params:set(i.."amen_rate",params:get(i.."amen_rate")/2)
@@ -510,6 +551,9 @@ function Amen:setup_parameters()
       id=i..'amen_scratch',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_scratch "..v)
         if v==1 then
           self.voice[i].disable_reset=true
@@ -533,6 +577,9 @@ function Amen:setup_parameters()
       id=i..'amen_reverse',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_reverse "..v)
         if v==1 then
           params:set(i.."amen_rate",-1*params:get(i.."amen_rate"))
@@ -553,6 +600,9 @@ function Amen:setup_parameters()
       id=i..'amen_strobe',
       behavior='toggle',
       action=function(v)
+        if params:get(i.."amen_play")==0 then
+          do return end
+        end
         print("amen_strobe "..v)
         if v==1 then
           self:effect_strobe(i,1)
@@ -639,7 +689,7 @@ function Amen:setup_parameters()
       type='control',
       name='timestretch slow',
       id=i..'amen_timestretch_slow',
-      controlspec=controlspec.new(1,16,'lin',0,2,'x',0.25/(16-1)),
+      controlspec=controlspec.new(1,16,'lin',0,4,'x',0.25/(16-1)),
       action=function(v)
         self:timestretch(i)
       end
@@ -648,7 +698,7 @@ function Amen:setup_parameters()
       type='control',
       name='timestretch window',
       id=i..'amen_timestretch_window',
-      controlspec=controlspec.new(0.125,16,'lin',0,2,'beats',0.125/(16-0.125)),
+      controlspec=controlspec.new(0.125,16,'lin',0,4,'beats',0.125/(16-0.125)),
       action=function(v)
         self:timestretch(i)
       end
@@ -672,6 +722,9 @@ function Amen:setup_parameters()
         elseif v>params:get(i.."amen_loopend") then
           params:set(i.."amen_loopend",v)
         else
+          if params:get(i.."amen_play")==0 then
+            do return end
+          end
           -- self:effect_jump(i,v)
           self:loop(i,v)
         end
@@ -722,9 +775,10 @@ function Amen:emit_note(division,t)
   -- keep the sample one beat
   for i=1,2 do
     if params:get(i.."amen_play")==1 and self.voice[i].sample~="" and not self.voice[i].disable_reset then
-      print(t/32%(self.voice[i].beats*2))
+      -- print(t/32%(self.voice[i].beats*2))
       self.voice[i].beat=t/32%(self.voice[i].beats*2)/2
       local loopPos=self.voice[i].beat/self.voice[i].beats
+      loopPos = util.linlin(0,1,params:get(i.."amen_loopstart"),params:get(i.."amen_loopend"),loopPos)
       -- self:loop(i,t/32%(self.voice[i].beats*2)/(self.voice[i].beats*2))
       if self.voice[i].hard_reset==true then
         self.voice[i].hard_reset=false
@@ -733,7 +787,7 @@ function Amen:emit_note(division,t)
       -- add option to sync every X loops (==0 is one whole loop)
       if t/32%math.ceil(self.voice[i].beats*2/(params:get(i.."amen_sync_per_loop")/4))==0 then
         -- reset to get back in sync
-        print("syncing loop")
+        print("syncing loop "..i.." to pos "..loopPos)
         self:loop(i,loopPos)
         --engine.amenreset(i)
       end
