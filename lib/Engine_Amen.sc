@@ -10,6 +10,8 @@ Engine_Amen : CroneEngine {
     var sampleVinyl;
     var playerSwap;
     var osfun;
+    var bitcrushBus;
+    var bitcrushSynth;
     // Amen ^
 
     *new { arg context, doneCallback;
@@ -18,6 +20,10 @@ Engine_Amen : CroneEngine {
 
     alloc {
         // Amen specific v0.0.1
+        bitcrushBus = Bus.audio(context.server, 2);
+
+        context.server.sync;
+
         sampleBuffAmen = Array.fill(2, { arg i; 
             Buffer.new(context.server);
         });
@@ -49,13 +55,24 @@ Engine_Amen : CroneEngine {
             Out.ar(0,snd*amp);
         }).add;
 
+        SynthDef("bitcrushSynthDef",{
+            arg inBus,bitcrush_bits=24,bitcrush_rate=44100;
+            var snd = In.ar(inBus,2);
+            snd = Decimator.ar(snd,Lag.kr(bitcrush_rate,1),Lag.kr(bitcrush_bits,1));
+            Out.ar(0,snd);
+        }).add;
+
+        bitcrushSynth = Synth.new("bitcrushSynthDef",[
+            \inBus,bitcrushBus,
+        ], context.g);
+
         // two players per buffer (4 players total)
         (0..4).do({arg i; 
             SynthDef("playerAmen"++i,{ 
                 arg bufnum, amp=0, t_trig=0,t_trigtime=0, amp_crossfade=0,
                 sampleStart=0,sampleEnd=1,samplePos=0,
                 rate=1,rateSlew=0,bpm_sample=1,bpm_target=1,
-                bitcrush=0,bitcrush_bits=24,bitcrush_rate=44100,
+                bitcrushSend=0,bitcrushSendBus,
                 scratch=0,strobe=0,vinyl=0,
                 timestretch=0,timestretchSlowDown=1,timestretchWindowBeats=1,
                 pan=0,lpf=20000,lpflag=0,hpf=10,hpflag=0;
@@ -104,9 +121,6 @@ Engine_Amen : CroneEngine {
                 snd = HPF.ar(snd,Lag.kr(hpf,hpflag));
                 // strobe
                 snd = ((strobe<1)*snd)+((strobe>0)*snd*LFPulse.ar(60/bpm_target*16));
-                // bitcrush
-                bitcrush = VarLag.kr(bitcrush,1,warp:\cubed);
-                snd = (snd*(1-bitcrush))+(bitcrush*Decimator.ar(snd,VarLag.kr(bitcrush_rate,1,warp:\cubed),VarLag.kr(bitcrush_bits,1,warp:\cubed)));
 
                 // vinyl wow + compressor
                 snd=(vinyl<1*snd)+(vinyl>0* Limiter.ar(Compander.ar(snd,snd,0.5,1.0,0.1,0.1,1,2),dur:0.0008));
@@ -120,7 +134,8 @@ Engine_Amen : CroneEngine {
 
                 SendTrig.kr(Impulse.kr(30),i,A2K.kr(((1-timestretch)*pos)+(timestretch*timestretchPos))/BufFrames.kr(bufnum)/BufRateScale.kr(bufnum));                        
 
-                Out.ar(0,snd)
+                Out.ar(bitcrushSendBus,snd*bitcrushSend)
+                Out.ar(0,snd*(1-bitcrushSend))
             }).add; 
         });
 
@@ -136,22 +151,10 @@ Engine_Amen : CroneEngine {
             if (((msg[2]==1)&&(playerSwap[0]==0))||((msg[2]==3)&&(playerSwap[0]==1)), {
                 NetAddr("127.0.0.1", 10111).sendMsg("poscheck",2,msg[3]);
             },{});
-
-            // if ((msg[2]==2)*(playerSwap[0]==1), {
-            //     NetAddr("127.0.0.1", 10111).sendMsg("poscheck",1,msg[3]);   //sendMsg works out the correct OSC message for you
-            // },{});
-
-            // NetAddr("127.0.0.1", 10111).sendMsg("poscheck",msg[2],msg[3]);   //sendMsg works out the correct OSC message for you
-            // if (msg[2]==0, {
-            //     NetAddr("127.0.0.1", 10111).sendMsg("amp_crossfade",1,playerSwap[0]+1);   //sendMsg works out the correct OSC message for you
-            // },{});
-            // if (msg[2]==1, {
-            //     NetAddr("127.0.0.1", 10111).sendMsg("amp_crossfade",2,playerSwap[1]+1);   //sendMsg works out the correct OSC message for you
-            // },{});
         },'/tr', context.server.addr);
 
         playerAmen = Array.fill(4,{arg i;
-            Synth("playerAmen"++i, target:context.xg);
+            Synth("playerAmen"++i,[\bitcrushSendBus,bitcrushBus], target:context.xg);
         });
 
         playerVinyl = Synth("vinylSound",[ \bufnum,sampleVinyl,\amp,0],target:context.xg);
@@ -362,12 +365,12 @@ Engine_Amen : CroneEngine {
         this.addCommand("amenbitcrush","ifff", { arg msg;
             // lua is sending 1-index
             playerAmen[msg[1]-1].set(
-                \bitcrush,msg[2],
-                \bitcrush_bits,msg[3],
-                \bitcrush_rate,msg[4],
+                \bitcrushSend,msg[2],
             );
             playerAmen[msg[1]+1].set(
-                \bitcrush,msg[2],
+                \bitcrushSend,msg[2],
+            );
+            bitcrushSynth.set(
                 \bitcrush_bits,msg[3],
                 \bitcrush_rate,msg[4],
             );
@@ -404,6 +407,8 @@ Engine_Amen : CroneEngine {
         (0..2).do({arg i; playerSwap[i].free});
         playerVinyl.free;
         sampleVinyl.free;
+        bitcrushBus.free;
+        bitcrushSynth.free;
         // ^ Amen specific
     }
 }
