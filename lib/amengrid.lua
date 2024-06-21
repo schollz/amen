@@ -30,6 +30,8 @@ function AmenGrid:new(args)
   end
 
   -- initiate the grid
+  local midigrid=util.file_exists(_path.code.."midigrid")
+  local grid=midigrid and include "midigrid/lib/mg_128" or grid
   m.g=grid.connect()
   m.g.key=function(x,y,z)
     if m.grid_on then
